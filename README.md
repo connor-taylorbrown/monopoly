@@ -30,6 +30,7 @@ Reference: https://flask-htmx.readthedocs.io/en/latest/quickstart.html
 ```source venv/bin/activate```
 1. `pip install -r requirements.txt`: Install packages required to run application.
 1. `flask run --debug`: Launch the application in debug mode.
+    - Substitute with `gunicorn --bind :8080 app:app` to test production configuration.
 
 Proceed from step 4 (Launch application) if dependencies have already been installed.
 
