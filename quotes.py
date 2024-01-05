@@ -20,6 +20,14 @@ class QuoteClient:
         return [Quote(label=i + 1, text=q['quote']) for i, q in enumerate(json)]
     
 
+class FallbackQuoteClient:
+    def get(self) -> list[Quote]:
+        return [
+            Quote(label=1, text="I said maybe..."),
+            Quote(label=1, text="You're gonna be the one that saves me...")
+        ]
+    
+
 class QuoteGenerator:
     def __init__(self, quotes: list[Quote]):
         self.quotes = quotes
