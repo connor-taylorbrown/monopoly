@@ -1,6 +1,6 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import random
-import requests
 
 
 @dataclass
@@ -9,28 +9,29 @@ class Quote:
     text: str
 
 
-class QuoteClient:
-    def __init__(self, port: int):
-        self.address = f'http://localhost:{port}'
-
+class QuoteClient(ABC):
+    @abstractmethod
     def get(self) -> list[Quote]:
-        response = requests.get(f'{self.address}/quotes')
-        json = response.json()
-
-        return [Quote(label=i + 1, text=q['quote']) for i, q in enumerate(json)]
+        pass
     
 
 class FallbackQuoteClient:
+    def __init__(self, client: QuoteClient):
+        self.client = client
+
     def get(self) -> list[Quote]:
-        return [
-            Quote(label=1, text="I said maybe..."),
-            Quote(label=1, text="You're gonna be the one that saves me...")
-        ]
+        try:
+            return self.client.get()
+        except Exception:
+            return [
+                Quote(label=1, text="I said maybe..."),
+                Quote(label=2, text="You're gonna be the one that saves me...")
+            ]
     
 
 class QuoteGenerator:
-    def __init__(self, quotes: list[Quote]):
-        self.quotes = quotes
+    def __init__(self, client: QuoteClient):
+        self.quotes = client.get()
 
     def get(self, quote: str) -> tuple[Quote, int]:
         quote = int(quote)
