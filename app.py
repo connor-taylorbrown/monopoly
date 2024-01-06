@@ -1,24 +1,19 @@
-from flask import Flask, render_template
-from quotes import FallbackQuoteClient, QuoteClient, QuoteGenerator
+from api import configure_routing
+from flask import Flask
+import requests
+from quotes import QuoteClient
 
 
-app = Flask(__name__)
-client = QuoteClient(port=3000)
+class MockClient(QuoteClient):
+    def __init__(self, port: int):
+        self.address = f'http://localhost:{port}'
 
-try:
-    quotes = client.get()
-except Exception:
-    client = FallbackQuoteClient()
-    quotes = client.get()
+    def get(self) -> list[dict]:
+        response = requests.get(f'{self.address}/quotes')
+        return response.json()
 
-@app.get('/')
-def home():
-    generator = QuoteGenerator(quotes)
-    quote, next = generator.get(0)
-    return render_template('index.html', label=quote.label, text=quote.text, next=next)
 
-@app.post('/quotes/<id>')
-def get_quote(id):
-    generator = QuoteGenerator(quotes)
-    quote, next = generator.get(id)
-    return render_template('partials/hello.html', label=quote.label, text=quote.text, next=next)
+def create_app():
+    ''' Default factory method for Flask CLI runner '''
+    app = Flask(__name__)
+    return configure_routing(app, MockClient(3000))

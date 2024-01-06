@@ -1,6 +1,8 @@
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import cache
+from logging import Logger
 import random
-import requests
 
 
 @dataclass
@@ -9,29 +11,35 @@ class Quote:
     text: str
 
 
-class QuoteClient:
-    def __init__(self, port: int):
-        self.address = f'http://localhost:{port}'
+class QuoteClient(ABC):
+    @abstractmethod
+    def get(self) -> list[dict]:
+        pass
 
-    def get(self) -> list[Quote]:
-        response = requests.get(f'{self.address}/quotes')
-        json = response.json()
-
-        return [Quote(label=i + 1, text=q['quote']) for i, q in enumerate(json)]
-    
 
 class FallbackQuoteClient:
-    def get(self) -> list[Quote]:
-        return [
-            Quote(label=1, text="I said maybe..."),
-            Quote(label=1, text="You're gonna be the one that saves me...")
-        ]
+    def __init__(self, client: QuoteClient, logger: Logger):
+        self.client = client
+        self.logger = logger
+
+    @cache
+    def get(self) -> list[dict]:
+        try:
+            return self.client.get()
+        except Exception:
+            self.logger.exception("Error reading from database")
+            return [
+                {"label": "Wisdom #1", "text": "I said maybe..."},
+                {"label": "Wisdom #2", "text": "You're gonna be the one that saves me..."}
+            ]
     
 
 class QuoteGenerator:
-    def __init__(self, quotes: list[Quote]):
-        self.quotes = quotes
+    def __init__(self, client: QuoteClient):
+        self.client = client
 
-    def get(self, quote: str) -> tuple[Quote, int]:
-        quote = int(quote)
-        return self.quotes[quote], random.randint(0, len(self.quotes) - 1)
+    def get(self, id: str) -> tuple[Quote, int]:
+        id = int(id)
+        quotes = self.client.get()
+        quote = Quote(**quotes[id])
+        return quote, random.randint(0, len(quotes) - 1)
