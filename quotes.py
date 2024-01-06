@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import cache
+from logging import Logger
 import random
 
 
@@ -11,28 +13,33 @@ class Quote:
 
 class QuoteClient(ABC):
     @abstractmethod
-    def get(self) -> list[Quote]:
+    def get(self) -> list[dict]:
         pass
-    
+
 
 class FallbackQuoteClient:
-    def __init__(self, client: QuoteClient):
+    def __init__(self, client: QuoteClient, logger: Logger):
         self.client = client
+        self.logger = logger
 
-    def get(self) -> list[Quote]:
+    @cache
+    def get(self) -> list[dict]:
         try:
             return self.client.get()
         except Exception:
+            self.logger.exception("Error reading from database")
             return [
-                Quote(label=1, text="I said maybe..."),
-                Quote(label=2, text="You're gonna be the one that saves me...")
+                {"label": "Wisdom #1", "text": "I said maybe..."},
+                {"label": "Wisdom #2", "text": "You're gonna be the one that saves me..."}
             ]
     
 
 class QuoteGenerator:
     def __init__(self, client: QuoteClient):
-        self.quotes = client.get()
+        self.client = client
 
-    def get(self, quote: str) -> tuple[Quote, int]:
-        quote = int(quote)
-        return self.quotes[quote], random.randint(0, len(self.quotes) - 1)
+    def get(self, id: str) -> tuple[Quote, int]:
+        id = int(id)
+        quotes = self.client.get()
+        quote = Quote(**quotes[id])
+        return quote, random.randint(0, len(quotes) - 1)

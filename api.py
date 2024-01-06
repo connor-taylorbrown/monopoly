@@ -2,9 +2,10 @@ from flask import Flask, render_template
 from quotes import FallbackQuoteClient, QuoteClient, QuoteGenerator
 
 
-def api(client: QuoteClient):
-    app = Flask(__name__)
-    quotes = QuoteGenerator(FallbackQuoteClient(client))
+def configure_routing(app: Flask, client: QuoteClient):
+    logger = app.logger
+    client = FallbackQuoteClient(client, logger)
+    quotes = QuoteGenerator(client)
 
     @app.get('/')
     def home():

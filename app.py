@@ -1,19 +1,19 @@
-from api import api
+from api import configure_routing
+from flask import Flask
 import requests
-from quotes import Quote, QuoteClient
+from quotes import QuoteClient
 
 
 class MockClient(QuoteClient):
     def __init__(self, port: int):
         self.address = f'http://localhost:{port}'
 
-    def get(self) -> list[Quote]:
+    def get(self) -> list[dict]:
         response = requests.get(f'{self.address}/quotes')
-        json = response.json()
-
-        return [Quote(label=i + 1, text=q['quote']) for i, q in enumerate(json)]
+        return response.json()
 
 
 def create_app():
     ''' Default factory method for Flask CLI runner '''
-    return api(MockClient(3000))
+    app = Flask(__name__)
+    return configure_routing(app, MockClient(3000))
