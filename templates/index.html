@@ -6,11 +6,17 @@
         <link href="/static/css/main.css" rel="stylesheet">
         <link href="{{ url_for('static', filename='favicon.ico') }}" rel="shortcut icon">
         <script src="https://unpkg.com/htmx.org@1.7.0/dist/htmx.js" type="text/javascript"></script>
-        <title>Mmm...</title>
+        <title>Monopoly</title>
     </head>
     <body>
-        <div class="flex h-screen bg-gradient-to-b from-blue-100 to-red-100">
-            {% include "partials/hello.html" %}
+        <div>
+            {% include "partials/state.html" %}
+            <button hx-post="/{{ game }}/roll" hx-swap="outerhtml" hx-target="#state">
+                Roll
+            </button>
+            <div id="feed">
+                
+            </div>
         </div>
     </body>
 </html>

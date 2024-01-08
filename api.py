@@ -1,20 +1,43 @@
-from flask import Flask, render_template
-from quotes import FallbackQuoteClient, QuoteClient, QuoteGenerator
+from flask import Flask, redirect, render_template, url_for
+from monopoly.server import GameServer
 
 
-def configure_routing(app: Flask, client: QuoteClient):
+def configure_routing(app: Flask, server: GameServer):
     logger = app.logger
-    client = FallbackQuoteClient(client, logger)
-    quotes = QuoteGenerator(client)
 
     @app.get('/')
-    def home():
-        quote, next = quotes.get(0)
-        return render_template('index.html', label=quote.label, text=quote.text, next=next)
+    def create():
+        game = server.create()
+        return redirect(url_for('join', id=game))
 
-    @app.post('/quotes/<id>')
-    def get_quote(id):
-        quote, next = quotes.get(id)
-        return render_template('partials/hello.html', label=quote.label, text=quote.text, next=next)
+    @app.get('/<id>')
+    def join(id):
+        _, state = server.get(int(id))
+        result = {
+            'game': id,
+            'player': state.player
+        }
+        return render_template('index.html', **result)
+
+    @app.post('/<id>/roll')
+    def roll(id):
+        game, state = server.get(int(id))
+        game.roll()
+        
+        player_state = state.players[state.player]
+        position_state = state.board[player_state.position]
+        result = {
+            'last_player': state.player,
+            'position': position_state,
+            'roll': state.roll,
+            'cash': player_state.cash
+        }
+        game.finalize_turn()
+
+        result = {
+            **result,
+            'player': state.player
+        }
+        return render_template('partials/update.html', **result)
     
     return app

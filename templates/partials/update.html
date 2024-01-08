@@ -1,0 +1,4 @@
+{% include "partials/state.html" %}
+<div id="feed" hx-swap-oob="beforeend">
+    <p>Player {{ last_player }} rolled {{ roll }}, moved to <span class="{{ position.set.color }}">{{ position.name }}</span>. Cash: ${{ cash }}</p>
+</div>
