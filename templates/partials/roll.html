@@ -2,5 +2,5 @@
 
 {% include "partials/state.html" %}
 <div id="feed" hx-swap-oob="afterbegin">
-    <p>Player {{ last_player.id }} finishes at {{ format_position(position) }}. Cash: ${{ last_player.cash }}</p>
+    <p>Player {{ player.id }} rolled {{ state.roll }}, moved to {{ format_position(position) }}. Cash: ${{ player.cash }}</p>
 </div>

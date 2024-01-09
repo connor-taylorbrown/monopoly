@@ -65,7 +65,8 @@
             "set": 3
         },
         {
-            "name": "Income Tax"
+            "name": "Income Tax",
+            "price": 200
         },
         {
             "name": "Kings Cross Station",
@@ -240,7 +241,8 @@
             "set": 10
         },
         {
-            "name": "Super Tax"
+            "name": "Super Tax",
+            "price": 100
         },
         {
             "name": "Mayfair",

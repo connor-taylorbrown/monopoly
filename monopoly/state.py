@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from monopoly.model import Player, Property, PropertyType
+from monopoly.model import Player, Property
 
 
 @dataclass
@@ -9,39 +9,6 @@ class GameState:
     player: int
     started: bool
     roll: tuple[int, int]
-
-    def must_leave_jail(self) -> bool:
-        player = self.players[self.player]
-        return player.in_jail == 1
-
-    def get_rent(self) -> int:
-        player = self.players[self.player]
-        position = player.position
-        property = self.board[position]
-
-        def is_full_set_owned():
-            return all(member.owner == property.owner for member in property.set)
-        
-        if property.owner is None or property.owner == player or property.mortgaged:
-            return 0
-        
-        if property.set.type == PropertyType.RESIDENTIAL:
-            level = property.houses
-            if level >= 1:
-                return property.rent[level]
-            elif is_full_set_owned(property):
-                return 2 * property.rent[0]
-            else:
-                return property.rent[0]
-        elif property.set.type == PropertyType.UTILITY:
-            roll = sum(self.roll)
-            if is_full_set_owned(property):
-                return 10 * roll
-            else:
-                return 4 * roll
-        elif property.set.type == PropertyType.STATION:
-            level = sum(1 for member in property.set if member.owner == property.owner) - 1
-            return property.rent[level]
         
 
 @dataclass
@@ -69,7 +36,7 @@ class StateUpdater:
 
     def go_to_jail(self):
         player = self.state.players[self.state.player]
-        player.position = 20
+        player.position = 10
         player.in_jail = 3
         player.doubles = 0
 

@@ -20,13 +20,20 @@ class Property:
     owner: Player = None
     mortgaged: bool = False
 
+
 class PropertyType(Enum):
+    NONE = 0
     RESIDENTIAL = 1
     UTILITY = 2
     STATION = 3
 
-@dataclass
+
 class PropertySet:
     color: str
     members: list[Property]
     type: PropertyType
+
+    def __init__(self, color, members, type):
+        self.color = color
+        self.members = [Property(**member) for member in members]
+        self.type = PropertyType(type)

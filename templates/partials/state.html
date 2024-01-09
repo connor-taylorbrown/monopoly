@@ -1,3 +1,22 @@
 <div id="state">
-    <p>Player {{ player }} to move</p>
+    <p>Player {{ player.id }} to move</p>
+    <table>
+        <tr>
+            <th>Cash</th>
+            <th>Position</th>
+            <th>Doubles</th>
+            <th>In Jail</th>
+        </tr>
+        {% for player in state.players %}
+        <tr>
+            <td>{{ player.cash }}</td>
+            <td>{{ player.position }}</td>
+            <td>{{ player.doubles }}</td>
+            <td>{{ player.in_jail }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <button hx-post="/{{ game }}/{{ action.id }}" hx-swap="outerhtml" hx-target="#state">
+        {{ action.text }}
+    </button>
 </div>

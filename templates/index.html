@@ -11,9 +11,6 @@
     <body>
         <div>
             {% include "partials/state.html" %}
-            <button hx-post="/{{ game }}/roll" hx-swap="outerhtml" hx-target="#state">
-                Roll
-            </button>
             <div id="feed">
                 
             </div>

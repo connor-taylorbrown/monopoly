@@ -38,6 +38,9 @@ class GameServer:
         self.board = board
         self.games = []
 
+    def exists(self, id: int) -> bool:
+        return id < len(self.games)
+
     def get(self, id: int) -> tuple[Game, GameState]:
         return self.games[id]
 
