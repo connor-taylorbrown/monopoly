@@ -8,6 +8,7 @@ class Player:
     position: int
     in_jail: int
     doubles: int
+    cards: list[dict]
 
 
 @dataclass
@@ -17,7 +18,7 @@ class Property:
     price: int = 0
     rent: list[int] = field(default_factory=lambda: [])
     houses: int = 0
-    owner: Player = None
+    owner: int | None = None
     mortgaged: bool = False
 
 

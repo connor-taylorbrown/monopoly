@@ -250,5 +250,169 @@
             "rent": [50, 200, 600, 1400, 1700, 2000],
             "set": 10
         }
+    ],
+    "chance": [
+        {
+            "action": "passGo",
+            "amount": 200,
+            "position": 0,
+            "message": "Advance to Go (Collect $200)"
+        },
+        {
+            "action": "jump",
+            "position": 11,
+            "message": "Advance to Pall Mall. If you pass Go, collect $200"
+        },
+        {
+            "action": "jump",
+            "position": 24,
+            "message": "Advance to Trafalgar Square. If you pass Go, collect $200"
+        },
+        {
+            "action": "jump",
+            "position": 39,
+            "message": "Advance to Mayfair"
+        },
+        {
+            "action": "jump",
+            "position": 5,
+            "message": "Take a trip to Kings Cross Station. If you pass Go, collect $200"
+        },
+        {
+            "action": "jump",
+            "type": 2,
+            "message": "Advance token to nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total ten times the amount thrown"
+        },
+        {
+            "action": "jump",
+            "type": 3,
+            "message": "Advance to the nearest Station. If unowned, you may buy it from the Bank. If owned, pay owner twice the rental to which they are otherwise entitled"
+        },
+        {
+            "action": "jump",
+            "type": 3,
+            "message": "Advance to the nearest Station. If unowned, you may buy it from the Bank. If owned, pay owner twice the rental to which they are otherwise entitled"
+        },
+        {
+            "action": "jump",
+            "offset": -3,
+            "message": "Go Back 3 Spaces"
+        },
+        {
+            "action": "collect",
+            "amount": 50,
+            "message": "Bank pays you dividend of $50"
+        },
+        {
+            "action": "collect",
+            "amount": 150,
+            "message": "Your building loan matures. Collect $150"
+        },
+        {
+            "action": "collectCard",
+            "deck": "Chance",
+            "message": "Get Out Of Jail Free"
+        },
+        {
+            "action": "goToJail",
+            "message": "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200"
+        },
+        {
+            "action": "generalRepairs",
+            "amounts": [25, 100],
+            "message": "Make general repairs on all your property. For each house pay $25. For each hotel pay $100"
+        },
+        {
+            "action": "pay",
+            "amount": 15,
+            "message": "Speeding fine $15"
+        },
+        {
+            "action": "payEachPlayer",
+            "amount": 50,
+            "message": "You have been elected Chairman of the Board. Pay each player $50"
+        }
+    ],
+    "communityChest": [
+        {
+            "action": "passGo",
+            "amount": 200,
+            "position": 0,
+            "message": "Advance to Go (Collect $200)"
+        },
+        {
+            "action": "collect",
+            "amount": 200,
+            "message": "Bank error in your favour. Collect $200"
+        },
+        {
+            "action": "collect",
+            "amount": 50,
+            "message": "From sale of stock you get $50"
+        },
+        {
+            "action": "collect",
+            "amount": 100,
+            "message": "Holiday fund matures. Receive $100"
+        },
+        {
+            "action": "collect",
+            "amount": 20,
+            "message": "Income tax refund. Collect $20"
+        },
+        {
+            "action": "collect",
+            "amount": 100,
+            "message": "Life insurance matures. Collect $100"
+        },
+        {
+            "action": "collect",
+            "amount": 25,
+            "message": "Receive $25 consultancy fee"
+        },
+        {
+            "action": "collect",
+            "amount": 10,
+            "message": "You have won second prize in a beauty contest. Collect $10"
+        },
+        {
+            "action": "collect",
+            "amount": 100,
+            "message": "You inherit $100"
+        },
+        {
+            "action": "collectFromEachPlayer",
+            "amount": 10,
+            "message": "It is your birthday. Collect $10 from each player"
+        },
+        {
+            "action": "pay",
+            "amount": 50,
+            "message": "Doctor's fee. Pay $50"
+        },
+        {
+            "action": "pay",
+            "amount": 100,
+            "message": "Pay hospital fees of $100"
+        },
+        {
+            "action": "pay",
+            "amount": 50,
+            "message": "Pay school fees of $50"
+        },
+        {
+            "action": "generalRepairs",
+            "amounts": [40, 115],
+            "message": "You are assessed for street repairs. $40 per house. $115 per hotel"
+        },
+        {
+            "action": "collectCard",
+            "deck": "Community Chest",
+            "message": "Get Out Of Jail Free"
+        },
+        {
+            "action": "goToJail",
+            "message": "Go to Jail. Go directly to Jail, do not pass Go, do not collect $200"
+        }
     ]
 }

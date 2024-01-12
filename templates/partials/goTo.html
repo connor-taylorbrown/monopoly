@@ -1,0 +1,8 @@
+<button hx-post="/{{ game }}/goTo/{{ action.position }}" hx-swap="outerhtml" hx-target="#state">
+    {% set position = state.get_destination(action.position).name %}
+    {% if position == "Jail" and not state.get_player().in_jail %}
+    Visit Jail
+    {% else %}
+    Go to {{ position }}
+    {% endif %}
+</button>

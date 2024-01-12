@@ -1,6 +1,0 @@
-{% from "macros.html" import format_position with context %}
-
-{% include "partials/state.html" %}
-<div id="feed" hx-swap-oob="afterbegin">
-    <p>Player {{ last_player.id }} finishes at {{ format_position(position) }}. Cash: ${{ last_player.cash }}</p>
-</div>

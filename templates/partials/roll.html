@@ -1,6 +1,3 @@
-{% from "macros.html" import format_position with context %}
-
-{% include "partials/state.html" %}
-<div id="feed" hx-swap-oob="afterbegin">
-    <p>Player {{ player.id }} rolled {{ state.roll }}, moved to {{ format_position(position) }}. Cash: ${{ player.cash }}</p>
-</div>
+<button hx-post="/{{ game }}/roll" hx-swap="outerhtml" hx-target="#state">
+    Roll
+</button>

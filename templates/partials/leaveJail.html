@@ -1,0 +1,13 @@
+{% macro get_name(state, position) %}
+{{ state.get_destination(position).name }}
+{% endmacro %}
+
+<button hx-post="{{ url_for('leave_jail', id=game, position=action.position, amount=action.amount) }}" hx-swap="outerhtml" hx-target="#state">
+    {% if action.position is none %}
+    Get Out of Jail
+    {% elif action.amount is not none %}
+    Pay {{ action.amount }} and go to {{ get_name(state, action.position) }}
+    {% else %}
+    Go to {{ get_name(state, action.position) }}
+    {% endif %}
+</button>

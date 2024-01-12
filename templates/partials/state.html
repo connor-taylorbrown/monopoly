@@ -1,5 +1,5 @@
 <div id="state">
-    <p>Player {{ player.id }} to move</p>
+    <p>Player {{ state.get_player().id }} to move</p>
     <table>
         <tr>
             <th>Cash</th>
@@ -7,16 +7,25 @@
             <th>Doubles</th>
             <th>In Jail</th>
         </tr>
-        {% for player in state.players %}
+        {% for player in state.get_players() %}
         <tr>
             <td>{{ player.cash }}</td>
-            <td>{{ player.position }}</td>
+            <td>{{ state.get_destination(player.position).name }}</td>
             <td>{{ player.doubles }}</td>
             <td>{{ player.in_jail }}</td>
         </tr>
         {% endfor %}
     </table>
-    <button hx-post="/{{ game }}/{{ action.id }}" hx-swap="outerhtml" hx-target="#state">
-        {{ action.text }}
-    </button>
+    <div id="message">
+        {{ action.message }}
+    </div>
+    {% if action is mapping %}
+        {% include 'partials/%s.html' % action.action %}
+    {% else %}
+        {% for option in action %}
+            {% with action=option %}
+                {% include 'partials/%s.html' % option.action %}
+            {% endwith %}
+        {% endfor %}
+    {% endif %}
 </div>

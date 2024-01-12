@@ -5,6 +5,7 @@ from monopoly.model import Player, Property
 @dataclass
 class GameState:
     board: list[Property]
+    decks: dict
     players: list[Player]
     player: int
     started: bool
@@ -16,23 +17,25 @@ class StateUpdater:
     state: GameState
 
     def set_roll(self, roll: tuple[int, int]):
+        player = self.state.players[self.state.player]
         self.state.roll = roll
+
+        a, b = roll
+        if a == b:
+            player.doubles += 1
+        else:
+            player.doubles = 0
 
     def next_player(self):
         self.state.player = (self.state.player + 1) % len(self.state.players)
 
-    def go_to(self, destination: int, doubles: bool):
-        player = self.state.players[self.state.player]
-        def pass_go():
-            if 0 <= destination < player.position:
-                player.cash += 200
+    def swap_card(self, deck: str):
+        card = self.state.decks[deck].pop(0)
+        self.state.decks[deck].append(card)
 
-        pass_go()
+    def go_to(self, destination: int):
+        player = self.state.players[self.state.player]
         player.position = destination
-        if doubles:
-            player.doubles += 1
-        else:
-            player.doubles = 0
 
     def go_to_jail(self):
         player = self.state.players[self.state.player]
@@ -40,10 +43,19 @@ class StateUpdater:
         player.in_jail = 3
         player.doubles = 0
 
-    def leave_jail(self, destination: int):
+    def collect_card(self, deck):
+        player = self.state.players[self.state.player]
+        card = deck.pop(0)
+        player.cards.append(card)
+
+    def use_card(self):
+        player = self.state.players[self.state.player]
+        card = player.cards.pop(0)
+        self.state.decks[card['deck']].append(card)
+
+    def leave_jail(self):
         player = self.state.players[self.state.player]
         player.in_jail = 0
-        self.go_to(destination, doubles=False)
 
     def serve_time(self):
         player = self.state.players[self.state.player]
@@ -65,14 +77,23 @@ class StateUpdater:
         player = self.state.players[self.state.player]
         player.cash -= amount
 
+    def pay_player(self, payee: int, amount: int):
+        player = self.state.players[self.state.player]
+        payee = self.state.players[payee]
+        player.cash -= amount
+        payee.cash += amount
+    
+    def pay_each_player(self, amount: int):
+        player = self.state.players[self.state.player]
+        player.cash -= amount * len(self.state.players) - 1
+
+        for i in range(len(self.state.players)):
+            if i == self.state.player:
+                break
+            payee = self.state.players[i]
+            payee.cash += amount
+
     def buy_property(self, property: Property):
         player = self.state.players[self.state.player]
         player.cash -= property.price
-        property.owner = player
-
-    def pay_players(self, players: list['Player'], amount: int):
-        player = self.state.players[self.state.player]
-        players = [payee for payee in players if payee != player]
-        player.cash -= len(players) * amount
-        for payee in players:
-            payee.cash += amount
+        property.owner = self.state.player

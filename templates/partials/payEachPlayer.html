@@ -1,0 +1,3 @@
+<button hx-post="/{{ game }}/payEachPlayer?amount={{ action.amount }}" hx-swap="outerhtml" hx-target="#state">
+    Pay {{ action.amount * (state.players | count - 1) }}
+</button>
