@@ -14,7 +14,9 @@ class Player:
 @dataclass
 class Property:
     name: str
-    set: 'PropertySet'
+    type: int
+    set: int = 0
+    color: str = ''
     price: int = 0
     rent: list[int] = field(default_factory=lambda: [])
     houses: int = 0
@@ -31,10 +33,4 @@ class PropertyType(Enum):
 
 class PropertySet:
     color: str
-    members: list[Property]
-    type: PropertyType
-
-    def __init__(self, color, members, type):
-        self.color = color
-        self.members = [Property(**member) for member in members]
-        self.type = PropertyType(type)
+    type: int

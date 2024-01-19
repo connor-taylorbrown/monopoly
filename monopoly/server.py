@@ -1,4 +1,5 @@
 import random
+from cachetools import cached
 import requests
 from monopoly.game import Game
 from monopoly.model import Player, Property, PropertySet
@@ -24,22 +25,6 @@ class Board:
     def get_community_chest(self):
         response = requests.get(f'{self.address}/communityChest')
         return response.json()
-    
-    def index_properties(self):
-        sets = self.get_sets()
-
-        properties = self.get_properties()
-        for property in properties:
-            set = sets[property.get('set', 0)]
-            if 'members' not in set:
-                set['members'] = []
-            set['members'].append(property)
-            property['set'] = set
-
-        for property in properties:
-            property['set'] = PropertySet(**property['set'])
-        
-        return [Property(**property) for property in properties]
 
 
 class GameServer:
@@ -58,7 +43,8 @@ class GameServer:
         chance = self.board.get_chance()
         community_chest = self.board.get_community_chest()
         state = GameState(
-            board=self.board.index_properties(),
+            board=self.board.get_properties(),
+            sets=self.board.get_sets(),
             decks={
                 'Chance': random.sample(chance, len(chance)),
                 'Community Chest': random.sample(community_chest, len(community_chest))

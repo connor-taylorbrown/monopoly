@@ -4,7 +4,8 @@ from monopoly.model import Player, Property
 
 @dataclass
 class GameState:
-    board: list[Property]
+    board: dict
+    sets: dict
     decks: dict
     players: list[Player]
     player: int
@@ -43,10 +44,11 @@ class StateUpdater:
         player.in_jail = 3
         player.doubles = 0
 
-    def collect_card(self, deck):
+    def collect_card(self, name):
         player = self.state.players[self.state.player]
-        card = deck.pop(0)
-        player.cards.append(card)
+        deck = self.state.decks[name]
+        card, self.state.decks[name] = deck[0], deck[1:]
+        player.cards += [card]
 
     def use_card(self):
         player = self.state.players[self.state.player]
@@ -85,15 +87,17 @@ class StateUpdater:
     
     def pay_each_player(self, amount: int):
         player = self.state.players[self.state.player]
-        player.cash -= amount * len(self.state.players) - 1
+        player.cash -= amount * (len(self.state.players) - 1)
 
         for i in range(len(self.state.players)):
             if i == self.state.player:
-                break
+                continue
             payee = self.state.players[i]
             payee.cash += amount
 
-    def buy_property(self, property: Property):
+    def buy_property(self, position: int):
         player = self.state.players[self.state.player]
-        player.cash -= property.price
-        property.owner = self.state.player
+        property = self.state.board[position]
+        
+        player.cash -= property['price']
+        property['owner'] = self.state.player

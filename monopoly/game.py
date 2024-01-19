@@ -12,9 +12,10 @@ def get_player(state) -> Player:
     return state.players[state.player]
 
 
-def get_property(state) -> Property:
-    player = get_player(state)
-    return state.board[player.position]
+def get_property(state, position) -> Property:
+    property = state.board[position]
+    set = state.sets[property.get('set', 0)]
+    return Property(**property, **set)
 
 
 def can_pass_go(state, destination) -> bool:
@@ -22,27 +23,32 @@ def can_pass_go(state, destination) -> bool:
     return 0 <= destination < player.position
 
 
-def is_full_set_owned(property) -> bool:
-    return all(member.owner == property.owner for member in property.set.members)
+def is_full_set_owned(state, property) -> bool:
+    return all(member['owner'] == property.owner for member in state.board if member['set'] == property.set)
+
+
+def count_set_owned(state, property) -> int:
+    return sum(1 for member in state.board if member['set'] == property.set and member['owner'] == property.owner)
 
 
 def is_purchaseable(property) -> bool:
-    return property.set.type != PropertyType.NONE and property.owner is None
+    return PropertyType(property.type) != PropertyType.NONE and property.owner is None
 
 
 def is_tax(property) -> bool:
-    return property.set.type == PropertyType.NONE and property.price > 0
+    return PropertyType(property.type) == PropertyType.NONE and property.price > 0
 
 
 def must_leave_jail(player) -> bool:
     return player.in_jail == 1
 
 
-def find_next(state: GameState, property_type: PropertyType) -> int:
-    player = get_player(state)
-    position = player.position
-    while state.board[position].set.type != property_type:
-        position = (position + 1) % len(state.board)
+def find_next(state: GameState, property_type: int) -> int:
+    position = get_player(state).position
+    for i in range(len(state.board)):
+        position = (position + i) % len(state.board)
+        if get_property(state, position).type == property_type:
+            break
 
     return position
 
@@ -61,7 +67,7 @@ class Game:
         doubles, total = a == b, a + b
 
         player = get_player(self.state)
-        if doubles and player.doubles == 2:
+        if doubles and player.doubles == 3:
             return actions.go_to_jail()
         
         destination = (player.position + total) % len(self.state.board)
@@ -86,8 +92,9 @@ class Game:
         return actions.end_turn()
     
     def collect_card(self):
-        deck = get_property(self.state).name
-        self.updater.collect_card(self.state.decks[deck])
+        position = get_player(self.state).position
+        deck = get_property(self.state, position).name
+        self.updater.collect_card(deck)
         return actions.end_turn()
     
     def use_card(self):
@@ -114,16 +121,22 @@ class Game:
         return actions.go_to(destination)
     
     def draw_card(self):
-        deck = get_property(self.state).name
+        position = get_player(self.state).position
+        deck = get_property(self.state, position).name
         card = self.state.decks[deck][0]
         if card['action'] != 'collectCard':
             self.updater.swap_card(deck)
         if card['action'] == 'jump':
             if 'type' in card:
-                card['position'] = find_next(self.state, PropertyType(card['type']))
+                return {
+                    'action': card['action'],
+                    'position': find_next(self.state, card['type'])
+                }
             if 'offset' in card:
-                card['position'] = get_player(self.state).position - card['offset']
-            return card
+                return {
+                    'action': card['action'],
+                    'position': get_player(self.state).position + card['offset']
+                }
         if card['action'] == 'generalRepairs':
             return actions.end_turn()
         return card
@@ -132,7 +145,9 @@ class Game:
         player = self.state.player
         self.updater.go_to(position)
 
-        property = get_property(self.state)
+        position = get_player(self.state).position
+        property = get_property(self.state, position)
+        type = PropertyType(property.type)
         if property.name == 'Go To Jail':
             return actions.go_to_jail()
         if property.name in ['Chance', 'Community Chest']:
@@ -141,27 +156,27 @@ class Game:
             return actions.pay(property.price)
         if is_purchaseable(property):
             return actions.buy_property(position)
-        if property.set.type == PropertyType.NONE or property.mortgaged:
+        if type == PropertyType.NONE or property.mortgaged:
             return actions.end_turn()
         if property.owner in [None, player]:
             return actions.end_turn()
-        if property.set.type == PropertyType.RESIDENTIAL:
+        if type == PropertyType.RESIDENTIAL:
             if property.houses >= 1:
                 amount = property.rent[property.houses]
-            elif is_full_set_owned(property):
+            elif is_full_set_owned(self.state, property):
                 amount = 2 * property.rent[0]
             else:
                 amount = property.rent[0]
             return actions.pay_rent(position, amount)
-        if property.set.type == PropertyType.UTILITY:
+        if type == PropertyType.UTILITY:
             roll = sum(self.state.roll)
-            if is_full_set_owned(property):
+            if is_full_set_owned(self.state, property):
                 amount = 10 * roll
             else:
                 amount = 4 * roll
             return actions.pay_rent(position, amount)
-        if property.set.type == PropertyType.STATION:
-            level = sum(1 for member in property.set.members if member.owner == property.owner) - 1
+        if type == PropertyType.STATION:
+            level = count_set_owned(self.state, property) - 1
             return actions.pay_rent(position, property.rent[level])
             
     def pay_bank(self, amount):
@@ -173,12 +188,11 @@ class Game:
         return actions.end_turn()
     
     def buy_property(self, position):
-        property = self.state.board[position]
-        self.updater.buy_property(property)
+        self.updater.buy_property(position)
         return actions.end_turn()
     
     def pay_rent(self, position, amount):
-        property = self.state.board[position]
+        property = get_property(self.state, position)
         self.updater.pay_player(property.owner, amount)
         return actions.end_turn()
     

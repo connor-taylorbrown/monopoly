@@ -20,11 +20,11 @@
         {{ action.message }}
     </div>
     {% if action is mapping %}
-        {% include 'partials/%s.html' % action.action %}
+        {% include 'partials/actions/%s.html' % action.action %}
     {% else %}
         {% for option in action %}
             {% with action=option %}
-                {% include 'partials/%s.html' % option.action %}
+                {% include 'partials/actions/%s.html' % option.action %}
             {% endwith %}
         {% endfor %}
     {% endif %}
