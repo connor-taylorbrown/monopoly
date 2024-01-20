@@ -34,7 +34,7 @@ class View:
             'action': action
         }
 
-        if 'message' in action:
+        if action is not None and 'message' in action:
             view = {
                 **view,
                 'message': action['message']

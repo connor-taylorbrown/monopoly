@@ -230,12 +230,12 @@ class Game:
         if not property.mortgaged:
             result = [
                 *result,
-                actions.mortgage(position)
+                actions.mortgage(position, property.price // 2)
             ]
         else:
             result = [
                 *result,
-                actions.lift_mortgage(position)
+                actions.lift_mortgage(position, int(1.1 * property.price / 2))
             ]
 
         if PropertyType(property.type) == PropertyType.RESIDENTIAL and property.houses < 5 and is_full_set_owned(self.state, position):
@@ -245,6 +245,12 @@ class Game:
             ]
 
         return result
+    
+    def mortgage(self, position, amount):
+        self.updater.mortgage_property(position, amount)
+
+    def lift_mortgage(self, position, amount):
+        self.updater.unmortgage_property(position, amount)
     
     def auction(self, position):
         self.updater.auction(position)

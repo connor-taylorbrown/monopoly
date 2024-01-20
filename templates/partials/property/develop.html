@@ -1,1 +1,3 @@
-<p>Build on {{ state.get_destination(action.position).name }}</p>
+<button hx-post="/{{ game }}/develop" hx-swap="outerhtml" hx-target="#players">
+    Build on {{ state.get_destination(action.position).name }}
+</button>

@@ -1,1 +1,3 @@
-<p>Mortgage {{ state.get_destination(action.position).name }}</p>
+<button hx-post="/{{ game }}/mortgage/{{ action.position }}?amount={{ action.amount }}" hx-swap="outerhtml" hx-target="#players">
+    Mortgage {{ state.get_destination(action.position).name }} to receive {{ action.amount }}
+</button>

@@ -1,0 +1,3 @@
+<button hx-post="/{{ game }}/unmortgage/{{ action.position }}?amount={{ action.amount }}" hx-swap="outerhtml" hx-target="#players">
+    Lift mortgage on {{ state.get_destination(action.position).name }} for {{ action.amount }}
+</button>

@@ -14,27 +14,5 @@
             {% endfor %}
         {% endif %}
     </div>
-    <table>
-        <tr>
-            <th>Cash</th>
-            <th>Position</th>
-            <th>Doubles</th>
-            <th>In Jail</th>
-            <th>Properties</th>
-        </tr>
-        {% for player in state.get_players() %}
-        {% with id=loop.index0 %}
-        <tr>
-            <td>{{ player.cash }}</td>
-            <td>{{ state.get_destination(player.position).name }}</td>
-            <td>{{ player.doubles }}</td>
-            <td>{{ player.in_jail }}</td>
-            <td>{% include 'partials/properties.html' %}</td>
-        </tr>
-        {% endwith %}
-        {% endfor %}
-    </table>
-    <div id="property">
-        
-    </div>
+    {% include 'partials/players.html' %}
 </div>

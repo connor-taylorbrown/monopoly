@@ -80,17 +80,19 @@ def end_turn():
     }
 
 
-def mortgage(position):
+def mortgage(position, amount):
     return {
         'action': 'mortgage',
-        'position': position
+        'position': position,
+        'amount': amount
     }
 
 
-def lift_mortgage(position):
+def lift_mortgage(position, amount):
     return {
         'action': 'liftMortgage',
-        'position': position
+        'position': position,
+        'amount': amount
     }
 
 

@@ -45,6 +45,28 @@ def configure_routing(app: Flask, server: GameServer):
         view = View.create(id, state, action=actions)
         return render_template('partials/property.html', **view)
     
+    @app.post('/<id>/mortgage/<property>')
+    def mortgage(id, property):
+        id = int(id)
+        game, state = server.get(id)
+
+        amount = request.args.get('amount')
+        game.mortgage(int(property), int(amount))
+
+        view = View.create(id, state, action=None)
+        return render_template('partials/players.html', **view)
+    
+    @app.post('/<id>/unmortgage/<property>')
+    def lift_mortgage(id, property):
+        id = int(id)
+        game, state = server.get(id)
+
+        amount = request.args.get('amount')
+        game.lift_mortgage(int(property), int(amount))
+
+        view = View.create(id, state, action=None)
+        return render_template('partials/players.html', **view)
+    
     @app.post('/<id>/auction/<property>')
     def auction(id, property):
         id = int(id)

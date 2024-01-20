@@ -64,16 +64,17 @@ class StateUpdater:
         if player.in_jail > 0:
             player.in_jail -= 1
 
-    def mortgage_property(self, property: Property):
-        player = self.state.players[self.state.player]
-        player.cash += property.price // 2
-        property.mortgaged = True
+    def mortgage_property(self, position: int, amount: int):
+        property = self.state.board[position]
+        player = self.state.players[property['owner']]
+        player.cash += amount
+        property['mortgaged'] = True
 
-    def unmortgage_property(self, property: Property):
-        player = self.state.players[self.state.player]
-        repayment = int(1.1 * property.price / 2)
+    def unmortgage_property(self, position: int, repayment: int):
+        property = self.state.board[position]
+        player = self.state.players[property['owner']]
         player.cash -= repayment
-        property.mortgaged = False
+        property['mortgaged'] = False
 
     def pay_bank(self, amount: int):
         player = self.state.players[self.state.player]
