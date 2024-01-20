@@ -58,10 +58,11 @@ def pay(amount: int):
     }
 
 
-def buy_property(property: int):
+def buy_property(property: int, price: int):
     return {
         'action': 'buy',
-        'position': property
+        'position': property,
+        'price': price
     }
 
 
@@ -76,4 +77,50 @@ def pay_rent(property: int, amount: int):
 def end_turn():
     return {
         'action': 'endTurn'
+    }
+
+
+def mortgage(position):
+    return {
+        'action': 'mortgage',
+        'position': position
+    }
+
+
+def lift_mortgage(position):
+    return {
+        'action': 'liftMortgage',
+        'position': position
+    }
+
+
+def develop(position):
+    return {
+        'action': 'develop',
+        'position': position
+    }
+
+
+def auction(position):
+    return {
+        'action': 'auction',
+        'position': position
+    }
+
+
+def bid():
+    return {
+        'action': 'bid'
+    }
+
+
+def stay():
+    return {
+        'action': 'stay'
+    }
+
+
+def end_auction():
+    return {
+        'action': 'endAuction'
     }

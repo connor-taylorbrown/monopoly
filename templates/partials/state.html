@@ -1,31 +1,40 @@
 <div id="state">
-    <p>Player {{ state.get_player().id }} to move</p>
+    <div id="action">
+        <p>Player {{ state.get_player().id }} to move</p>
+        <div id="message">
+            {{ message }}
+        </div>
+        {% if action is mapping %}
+            {% include 'partials/state/%s.html' % action.action %}
+        {% else %}
+            {% for option in action %}
+                {% with action=option %}
+                    {% include 'partials/state/%s.html' % option.action %}
+                {% endwith %}
+            {% endfor %}
+        {% endif %}
+    </div>
     <table>
         <tr>
             <th>Cash</th>
             <th>Position</th>
             <th>Doubles</th>
             <th>In Jail</th>
+            <th>Properties</th>
         </tr>
         {% for player in state.get_players() %}
+        {% with id=loop.index0 %}
         <tr>
             <td>{{ player.cash }}</td>
             <td>{{ state.get_destination(player.position).name }}</td>
             <td>{{ player.doubles }}</td>
             <td>{{ player.in_jail }}</td>
+            <td>{% include 'partials/properties.html' %}</td>
         </tr>
+        {% endwith %}
         {% endfor %}
     </table>
-    <div id="message">
-        {{ action.message }}
+    <div id="property">
+        
     </div>
-    {% if action is mapping %}
-        {% include 'partials/actions/%s.html' % action.action %}
-    {% else %}
-        {% for option in action %}
-            {% with action=option %}
-                {% include 'partials/actions/%s.html' % option.action %}
-            {% endwith %}
-        {% endfor %}
-    {% endif %}
 </div>

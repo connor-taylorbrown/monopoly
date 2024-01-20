@@ -1,0 +1,3 @@
+<button hx-post="/{{ game }}/auction/{{ action.position }}" hx-swap="outerhtml" hx-target="#action">
+    Auction {{ state.get_destination(action.position).name }}
+</button>

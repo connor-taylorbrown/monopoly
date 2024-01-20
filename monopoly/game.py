@@ -12,6 +12,10 @@ def get_player(state) -> Player:
     return state.players[state.player]
 
 
+def get_next_player(state) -> int:
+    return (state.player + 1) % len(state.players)
+
+
 def get_property(state, position) -> Property:
     property = state.board[position]
     set = state.sets[property.get('set', 0)]
@@ -23,12 +27,16 @@ def can_pass_go(state, destination) -> bool:
     return 0 <= destination < player.position
 
 
-def is_full_set_owned(state, property) -> bool:
-    return all(member['owner'] == property.owner for member in state.board if member['set'] == property.set)
+def is_full_set_owned(state, position) -> bool:
+    property = get_property(state, position)
+    properties = (get_property(state, i) for i in range(len(state.board)))
+    return all(member.owner == property.owner for member in properties if member.set == property.set)
 
 
-def count_set_owned(state, property) -> int:
-    return sum(1 for member in state.board if member['set'] == property.set and member['owner'] == property.owner)
+def count_set_owned(state, position) -> int:
+    property = get_property(state, position)
+    properties = (get_property(state, i) for i in range(len(state.board)))
+    return sum(1 for member in properties if member.set == property.set and member.owner == property.owner)
 
 
 def is_purchaseable(property) -> bool:
@@ -155,7 +163,11 @@ class Game:
         if is_tax(property):
             return actions.pay(property.price)
         if is_purchaseable(property):
-            return actions.buy_property(position)
+            auction = actions.auction(position)
+            if get_player(self.state).cash >= property.price:
+                return [actions.buy_property(position, property.price), auction]
+            else:
+                return auction
         if type == PropertyType.NONE or property.mortgaged:
             return actions.end_turn()
         if property.owner in [None, player]:
@@ -163,20 +175,20 @@ class Game:
         if type == PropertyType.RESIDENTIAL:
             if property.houses >= 1:
                 amount = property.rent[property.houses]
-            elif is_full_set_owned(self.state, property):
+            elif is_full_set_owned(self.state, position):
                 amount = 2 * property.rent[0]
             else:
                 amount = property.rent[0]
             return actions.pay_rent(position, amount)
         if type == PropertyType.UTILITY:
             roll = sum(self.state.roll)
-            if is_full_set_owned(self.state, property):
+            if is_full_set_owned(self.state, position):
                 amount = 10 * roll
             else:
                 amount = 4 * roll
             return actions.pay_rent(position, amount)
         if type == PropertyType.STATION:
-            level = count_set_owned(self.state, property) - 1
+            level = count_set_owned(self.state, position) - 1
             return actions.pay_rent(position, property.rent[level])
             
     def pay_bank(self, amount):
@@ -187,8 +199,8 @@ class Game:
         self.updater.pay_each_player(amount)
         return actions.end_turn()
     
-    def buy_property(self, position):
-        self.updater.buy_property(position)
+    def buy_property(self, position, price):
+        self.updater.buy_property(position, price)
         return actions.end_turn()
     
     def pay_rent(self, position, amount):
@@ -199,7 +211,7 @@ class Game:
     def end_turn(self):
         player = get_player(self.state)
         if player.doubles < 1:
-            self.updater.next_player()
+            self.updater.set_player(get_next_player(self.state))
 
         next_player = get_player(self.state)
         if next_player.in_jail:
@@ -210,3 +222,59 @@ class Game:
             ]
         
         return actions.roll()
+    
+    def use_property(self, position):
+        property = get_property(self.state, position)
+
+        result = []
+        if not property.mortgaged:
+            result = [
+                *result,
+                actions.mortgage(position)
+            ]
+        else:
+            result = [
+                *result,
+                actions.lift_mortgage(position)
+            ]
+
+        if PropertyType(property.type) == PropertyType.RESIDENTIAL and property.houses < 5 and is_full_set_owned(self.state, position):
+            result = [
+                *result,
+                actions.develop(position)
+            ]
+
+        return result
+    
+    def auction(self, position):
+        self.updater.auction(position)
+        return [actions.bid(), actions.stay()]
+    
+    def bid(self, amount):
+        auction = self.state.auction
+        if amount <= auction['amount']:
+            return [actions.bid(), actions.stay()]
+        
+        self.updater.bid(amount)
+
+        next_player = get_next_player(self.state)
+        self.updater.set_player(next_player)
+        return [actions.bid(), actions.stay()]
+    
+    def stay(self):
+        next_player = get_next_player(self.state)
+        self.updater.set_player(next_player)
+
+        player = self.state.player
+        last_bidder = self.state.auction['bidder']
+        if player == last_bidder:
+            return [actions.end_auction()]
+
+        return [actions.bid(), actions.stay()]
+    
+    def end_auction(self):
+        position, amount, auctioneer = [self.state.auction[k] for k in ['position', 'amount', 'auctioneer']]
+        self.updater.buy_property(position, amount)
+        self.updater.set_player(auctioneer)
+        
+        return actions.end_turn()

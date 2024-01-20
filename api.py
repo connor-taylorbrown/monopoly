@@ -34,6 +34,52 @@ def configure_routing(app: Flask, server: GameServer):
 
         view = View.create(id, state, action=actions.roll())
         return render_template('index.html', **view)
+    
+    @app.get('/<id>/properties/<property>')
+    def get_property(id, property):
+        id = int(id)
+        game, state = server.get(id)
+
+        actions = game.use_property(int(property))
+
+        view = View.create(id, state, action=actions)
+        return render_template('partials/property.html', **view)
+    
+    @app.post('/<id>/auction/<property>')
+    def auction(id, property):
+        id = int(id)
+        game, state = server.get(id)
+
+        actions = game.auction(int(property))
+
+        view = View.create(id, state, action=actions)
+        return render_template('partials/auction.html', **view)
+    
+    @app.post('/<id>/bid')
+    def bid(id):
+        id = int(id)
+        game, state = server.get(id)
+
+        price = request.form['price']
+        actions = game.bid(int(price))
+
+        view = View.create(id, state, action=actions)
+        return render_template('partials/auction.html', **view)
+    
+    @app.post('/<id>/stay')
+    def stay(id):
+        id = int(id)
+        game, state = server.get(id)
+
+        actions = game.stay()
+
+        view = View.create(id, state, action=actions)
+        return render_template('partials/auction.html', **view)
+    
+    @app.post('/<id>/endAuction')
+    @show_state
+    def end_auction(game: Game):
+        return game.end_auction()
 
     @app.post('/<id>/roll')
     @show_state
@@ -64,7 +110,8 @@ def configure_routing(app: Flask, server: GameServer):
     @app.post('/<id>/buy/<position>')
     @show_state
     def buy(game: Game, position):
-        return game.buy_property(int(position))
+        price = request.args.get('price')
+        return game.buy_property(int(position), int(price))
     
     @app.post('/<id>/rent/<position>')
     @show_state

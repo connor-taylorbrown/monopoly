@@ -1,0 +1,13 @@
+<div id="action">
+    {% set bid=state.last_bid() %}
+    <p>For {{ state.get_destination(bid.position).name }}</p>
+    {% if bid.bidder is not none %}
+    <p>Latest bid: Player {{ bid.bidder }} for {{ bid.amount }}</p>
+    {% endif %}
+    <p>Player {{ state.get_player().id }} to bid</p>
+    {% for option in action %}
+        {% with action=option %}
+            {% include 'partials/auction/%s.html' % action.action %}
+        {% endwith %}
+    {% endfor %}
+</div>

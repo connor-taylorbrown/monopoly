@@ -564,9 +564,14 @@ def test_go_to():
             "Player should pay tax"
         ),
         (
-            state_with_player(board=with_property(set=1, owner=None)), position,
-            should_be_at_position(position), actions.buy_property(position),
-            "Player should buy property"
+            state_with_player(board=with_property(set=1, owner=None, price=200), cash=200), position,
+            should_be_at_position(position), [actions.buy_property(position, 200), actions.auction(position)],
+            "Player should have option to buy property given enough cash"
+        ),
+        (
+            state_with_player(board=with_property(set=1, owner=None, price=200), cash=150), position,
+            should_be_at_position(position), actions.auction(position),
+            "Player should auction property given insufficient cash"
         ),
         (
             state_with_player(board=with_property(mortgaged=True)), position,
@@ -661,7 +666,7 @@ def test_buy_property():
     
     test_cases = [
         (
-            state_with_player(board=board_with_property(position, price), cash=400), position,
+            state_with_player(board=board_with_property(position, price), cash=400), position, price,
             should_buy_property(player=0, cash=200), actions.end_turn(),
             "Player should buy property"
         )
@@ -677,10 +682,10 @@ def test_buy_property():
             ]
         }
 
-    for state, position, expectedState, expectedAmount, message in test_cases:
+    for state, position, price, expectedState, expectedAmount, message in test_cases:
         sut = Game(state, StateUpdater(state))
 
-        gotState, gotAction = state, sut.buy_property(position)
+        gotState, gotAction = state, sut.buy_property(position, price)
 
         assert query(gotState) == expectedState, message
         assert gotAction == expectedAmount, message

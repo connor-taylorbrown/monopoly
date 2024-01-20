@@ -27,8 +27,8 @@ class StateUpdater:
         else:
             player.doubles = 0
 
-    def next_player(self):
-        self.state.player = (self.state.player + 1) % len(self.state.players)
+    def set_player(self, player):
+        self.state.player = player
 
     def swap_card(self, deck: str):
         card = self.state.decks[deck].pop(0)
@@ -95,9 +95,27 @@ class StateUpdater:
             payee = self.state.players[i]
             payee.cash += amount
 
-    def buy_property(self, position: int):
+    def buy_property(self, position: int, price: int):
         player = self.state.players[self.state.player]
         property = self.state.board[position]
         
-        player.cash -= property['price']
+        player.cash -= price
         property['owner'] = self.state.player
+
+
+    def auction(self, position):
+        self.state.auction = {
+            'position': position,
+            'auctioneer': self.state.player,
+            'bidder': None,
+            'amount': 0
+        }
+
+
+    def bid(self, amount):
+        player = self.state.player
+        self.state.auction = {
+            **self.state.auction,
+            'bidder': player,
+            'amount': amount
+        }

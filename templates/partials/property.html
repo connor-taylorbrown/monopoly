@@ -1,0 +1,7 @@
+<div id="property">
+    {% for option in action %}
+        {% with action=option %}
+            {% include 'partials/property/%s.html' % action.action %}
+        {% endwith %}
+    {% endfor %}
+</div>
