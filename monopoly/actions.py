@@ -96,10 +96,19 @@ def lift_mortgage(position, amount):
     }
 
 
-def develop(position):
+def develop(position, amount):
     return {
         'action': 'develop',
-        'position': position
+        'position': position,
+        'amount': amount
+    }
+
+
+def demolish(position, amount):
+    return {
+        'action': 'demolish',
+        'position': position,
+        'amount': amount
     }
 
 
@@ -122,7 +131,8 @@ def stay():
     }
 
 
-def end_auction():
+def end_auction(position):
     return {
-        'action': 'endAuction'
+        'action': 'endAuction',
+        'position': position
     }

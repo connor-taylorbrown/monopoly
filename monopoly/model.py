@@ -16,12 +16,14 @@ class Property:
     name: str
     type: int
     set: int = 0
+    building: int = 0
     color: str = ''
     price: int = 0
     rent: list[int] = field(default_factory=lambda: [])
     houses: int = 0
     owner: int | None = None
     mortgaged: bool = False
+    encumbered: bool = False
 
 
 class PropertyType(Enum):

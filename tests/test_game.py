@@ -8,16 +8,19 @@ from tests.utils.serialize import new_player, new_property, new_set, new_state, 
 
 
 @serialize
-def state_with_player(board=[], roll=(0,0), position=0, doubles=0, jail_time=0, cash=0):
+def state_with_player(board=[], roll=(0,0), position=0, doubles=0, jail_time=0, cash=0, sets=None, auction=None):
+    if sets is None:
+        sets = [new_set(i) for i in range(4)]
     return {
         **new_state(),
         'roll': roll,
         'board': board,
-        'sets': [new_set(i) for i in range(4)],
+        'sets': sets,
         'player': 0,
         'players': [
             player(position, doubles, jail_time, cash)
-        ]
+        ],
+        'auction': auction
     }
 
 
@@ -95,14 +98,38 @@ def board_with_deck(name, position):
     return board
 
 
-def board_with_property(position, price=0, owner=None):
+def board(position, property):
     board = [new_property() for _ in range(40)]
-    board[position] = {
+    board[position] = property
+
+    return board
+
+
+def with_property(price=0, owner=None, mortgaged=False, encumbered=False):
+    return {
         **new_property(),
         'price': price,
-        'owner': owner
+        'owner': owner,
+        'mortgaged': mortgaged,
+        'encumbered': encumbered
     }
 
+
+def property_set(property, owned, total):
+    return (
+        {
+            **property,
+            'owner': property['owner'] if i < owned else None
+        }
+        for i in range(total)
+    )
+
+
+def board_with_set(position, set):
+    board = [new_property() for _ in range(40)]
+    for i, property in enumerate(set):
+        board[position+i] = property
+    
     return board
 
 
@@ -182,18 +209,16 @@ def should_leave_jail_with_cash(cash):
     }
 
 
-def should_buy_property(player, cash):
+def should_buy_property(buyer, amounts, encumbered=False):
+    players = [{'cash': amount} for amount in amounts]
     return {
         'board': [
             {
-                'owner': player
+                'owner': buyer,
+                'encumbered': encumbered
             }
         ],
-        'players': [
-            {
-                'cash': cash
-            }
-        ]
+        'players': players
     }
 
 
@@ -292,7 +317,7 @@ def test_go_to_jail():
     test_cases = [
         (
             state_with_player(position=5),
-            should_go_to_jail(), actions.end_turn(),
+            should_go_to_jail(), None,
             "Player should go to jail"
         )
     ]
@@ -317,7 +342,7 @@ def test_collect_card():
     test_cases = [
         (
             player_at_deck(name, deck, board_with_deck),
-            should_collect_card(name, deck), actions.end_turn(),
+            should_collect_card(name, deck), None,
             "Player should collect card"
         )
     ]
@@ -374,7 +399,7 @@ def test_serve_time():
     test_cases = [
         (
             state_with_player(jail_time=3),
-            should_have_time(time=2), actions.end_turn(),
+            should_have_time(time=2), None,
             "Player should serve time"
         )
     ]
@@ -503,9 +528,8 @@ def test_draw_card():
 def test_go_to():
     position = 2
 
-    def with_property(name='', set=0, price=0, owner=None, mortgaged=False, houses=0, rent=[], callback=None):
-        board = [new_property() for _ in range(40)]
-        board[position] = {
+    def with_property(name='', set=0, price=0, owner=None, mortgaged=False, houses=0, rent=[]):
+        return {
             **new_property(),
             'name': name,
             'set': set,
@@ -516,100 +540,69 @@ def test_go_to():
             'rent': rent
         }
 
-        if callback:
-            return callback(board, owner, set)
-        return board
-    
-
-    def with_partial_set(board, owner, set):
-        board[position+1] = {
-            **new_property(),
-            'owner': owner,
-            'set': set
-        }
-
-        board[position+2] = {
-            **new_property(),
-            'owner': owner + 1,
-            'set': set
-        }
-
-        return board
-    
-
-    def with_full_set(board, owner, set):
-        board[position+1] = {
-            **new_property(),
-            'owner': owner,
-            'set': set
-        }
-
-        return board
-
-
     test_cases = [
         (
-            state_with_player(board=with_property('Go To Jail')), position,
+            state_with_player(board=board(position, with_property('Go To Jail'))), position,
             should_be_at_position(position), actions.go_to_jail(),
             "Player should go to jail"
         ),
         (
-            state_with_player(board=with_property('Community Chest')), position,
+            state_with_player(board=board(position, with_property('Community Chest'))), position,
             should_be_at_position(position), actions.draw_card(),
             "Player should draw card"
         ),
         (
-            state_with_player(board=with_property(set=0, price=200)), position,
+            state_with_player(board=board(position, with_property(set=0, price=200))), position,
             should_be_at_position(position), actions.pay(200),
             "Player should pay tax"
         ),
         (
-            state_with_player(board=with_property(set=1, owner=None, price=200), cash=200), position,
+            state_with_player(board=board(position, with_property(set=1, owner=None, price=200)), cash=200), position,
             should_be_at_position(position), [actions.buy_property(position, 200), actions.auction(position)],
             "Player should have option to buy property given enough cash"
         ),
         (
-            state_with_player(board=with_property(set=1, owner=None, price=200), cash=150), position,
+            state_with_player(board=board(position, with_property(set=1, owner=None, price=200)), cash=150), position,
             should_be_at_position(position), actions.auction(position),
             "Player should auction property given insufficient cash"
         ),
         (
-            state_with_player(board=with_property(mortgaged=True)), position,
-            should_be_at_position(position), actions.end_turn(),
+            state_with_player(board=board(position, with_property(mortgaged=True))), position,
+            should_be_at_position(position), None,
             "Player should not take action on mortgaged property"
         ),
         (
-            state_with_player(board=with_property(owner=0)), position,
-            should_be_at_position(position), actions.end_turn(),
+            state_with_player(board=board(position, with_property(owner=0))), position,
+            should_be_at_position(position), None,
             "Player should not take action on own property"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=1, houses=2, rent=[10, 20, 30])), position,
+            state_with_player(board=board(position, with_property(owner=1, set=1, houses=2, rent=[10, 20, 30]))), position,
             should_be_at_position(position), actions.pay_rent(position, 30),
             "Player should pay rent for number of houses"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=1, houses=0, rent=[10], callback=with_full_set)), position,
+            state_with_player(board=board_with_set(position, property_set(with_property(owner=1, set=1, houses=0, rent=[10]), owned=3, total=3))), position,
             should_be_at_position(position), actions.pay_rent(position, 20),
             "Player should pay double rent to owner of full set"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=1, houses=0, rent=[10], callback=with_partial_set)), position,
+            state_with_player(board=board_with_set(position, property_set(with_property(owner=1, set=1, houses=0, rent=[10]), owned=2, total=3))), position,
             should_be_at_position(position), actions.pay_rent(position, 10),
             "Player should pay base rent to owner of partial set"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=2, callback=with_full_set), roll=(1,6)), position,
+            state_with_player(board=board_with_set(position, property_set(with_property(owner=1, set=2), owned=2, total=2)), roll=(1,6)), position,
             should_be_at_position(position), actions.pay_rent(position, 70),
             "Player should pay 10x dice roll to owner of full set of utilities"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=2, callback=with_partial_set), roll=(1,6)), position,
+            state_with_player(board=board_with_set(position, property_set(with_property(owner=1, set=2), owned=1, total=2)), roll=(1,6)), position,
             should_be_at_position(position), actions.pay_rent(position, 28),
             "Player should pay 4x dice roll to owner of partial set of utilities"
         ),
         (
-            state_with_player(board=with_property(owner=1, set=3, rent=[10, 20, 30], callback=with_partial_set)), position,
+            state_with_player(board=board_with_set(position, property_set(with_property(owner=1, set=3, rent=[10, 20, 30]), owned=2, total=4))), position,
             should_be_at_position(position), actions.pay_rent(position, 20),
             "Player should pay rent for number of stations owned"
         )
@@ -628,7 +621,7 @@ def test_pay_bank():
     test_cases = [
         (
             state_with_player(cash=200), 50,
-            should_have_cash(150), actions.end_turn(),
+            should_have_cash(150), None,
             "Player should pay amount"
         )
     ]
@@ -646,7 +639,7 @@ def test_pay_each_player():
     test_cases = [
         (
             state_with_players(players=3 * [player(cash=100)]), 50,
-            should_have_cash(0, 150, 150), actions.end_turn(),
+            should_have_cash(0, 150, 150), None,
             "Player should pay each player amount"
         )
     ]
@@ -661,25 +654,32 @@ def test_pay_each_player():
 
 
 def test_buy_property():
-    price = 200
     position = 8
     
     test_cases = [
         (
-            state_with_player(board=board_with_property(position, price), cash=400), position, price,
-            should_buy_property(player=0, cash=200), actions.end_turn(),
-            "Player should buy property"
+            state_with_players(board=board(position, with_property(price=50, owner=None)), players=2 * [player(cash=150)]), position, 50,
+            should_buy_property(buyer=0, amounts=[100, 150]), None,
+            "Player should buy property from bank"
+        ),
+        (
+            state_with_players(board=board(position, with_property(price=50, owner=1)), players=2 * [player(cash=150)]), position, 50,
+            should_buy_property(buyer=0, amounts=[100, 200]), None,
+            "Player should buy property from other player"
+        ),
+        (
+            state_with_players(board=board(position, with_property(price=50, owner=1, mortgaged=True)), players=2 * [player(cash=150)]), position, 50,
+            should_buy_property(buyer=0, amounts=[100, 200], encumbered=True), None,
+            "Given existing mortgage, buyer should pay higher interest rate when lifting mortgage"
         )
     ]
 
     def query(state):
         return {
             'board': [
-                {k: state.board[position][k] for k in ['owner']}
+                {k: state.board[position][k] for k in ['owner', 'encumbered']}
             ],
-            'players': [
-                query_player(state, ['cash'])
-            ]
+            'players': query_players(state, ['cash']),
         }
 
     for state, position, price, expectedState, expectedAmount, message in test_cases:
@@ -695,8 +695,8 @@ def test_pay_rent():
     position = 8
     test_cases = [
         (
-            state_with_players(board=board_with_property(position, owner=1), players=2 * [player(cash=100)]), position, 20,
-            should_have_cash(80, 120), actions.end_turn(),
+            state_with_players(board=board(position, with_property(owner=1)), players=2 * [player(cash=100)]), position, 20,
+            should_have_cash(80, 120), None,
             "Player should pay rent to property owner"
         )
     ]
@@ -755,4 +755,181 @@ def test_end_turn():
         gotState, gotAction = state, sut.end_turn()
 
         assert query(gotState) == expectedState, message
+        assert gotAction == expectedAction, message
+
+
+def test_use_property():
+    owner = 0
+    residential = 1
+    station = 3
+    position = 5
+
+    def with_building_cost(cost):
+        sets = [new_set(i) for i in range(4)]
+        sets[residential] = {
+            'type': residential,
+            'building': cost
+        }
+
+        return sets
+
+    def with_undeveloped_property(price, type):
+        return {
+            **new_property(),
+            'owner': owner,
+            'set': type,
+            'price': price
+        }
+    
+    def with_mortgaged_property(price, type, mortgaged=True):
+        return {
+            **with_undeveloped_property(price, type),
+            'mortgaged': mortgaged
+        }
+    
+    def partially_mortgaged_set(price, houses):
+        return [
+            with_mortgaged_property(price, residential, house)
+            for house in houses
+        ]
+    
+    def with_encumbered_property(price, type):
+        return {
+            **with_mortgaged_property(price, type),
+            'encumbered': True
+        }
+    
+    def with_developed_property(houses):
+        return {
+            **new_property(),
+            'owner': owner,
+            'set': residential,
+            'houses': houses
+        }
+    
+    def developed_property_set(houses):
+        return [
+            with_developed_property(house)
+            for house in houses
+        ]
+
+    test_cases = [
+        (
+            state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, station), owned=2, total=2))), position,
+            [actions.auction(position), actions.mortgage(position, 100)],
+            "Given non-residential property, owner should have option to mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=1, total=2))), position,
+            [actions.auction(position), actions.mortgage(position, 100)],
+            "Given residential property, owner of partial set should have option to mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_mortgaged_property(200, residential), owned=2, total=2)), cash=110), position,
+            [actions.auction(position), actions.lift_mortgage(position, 110)],
+            "Given mortgaged property, owner should have option to lift mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_mortgaged_property(200, residential), owned=2, total=2)), cash=0), position,
+            [actions.auction(position)],
+            "Given mortgaged property and insufficient cash, owner should not have option to lift mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_encumbered_property(200, residential), owned=2, total=2)), cash=120), position,
+            [actions.auction(position), actions.lift_mortgage(position, 120)],
+            "Given encumbered property, owner should pay double interest to lift mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_encumbered_property(200, residential), owned=2, total=2)), cash=0), position,
+            [actions.auction(position)],
+            "Given encumbered property and insufficient cash, owner should not have option to lift mortgage"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=2, total=2)), sets=with_building_cost(50), cash=50), position,
+            [actions.auction(position), actions.mortgage(position, 100), actions.develop(position, 50)],
+            "Given undeveloped residential property, owner should have option to mortgage or develop"
+        ),
+        (
+            state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=2, total=2)), sets=with_building_cost(50), cash=0), position,
+            [actions.auction(position), actions.mortgage(position, 100)],
+            "Given undeveloped residential property and insufficient cash, owner should not have option to develop"
+        ),
+        (
+            state_with_player(board=board_with_set(position, partially_mortgaged_set(200, [False, True, False])), sets=with_building_cost(50), cash=50), position,
+            [actions.auction(position), actions.mortgage(position, 100)],
+            "Given partially mortgaged residential set, owner should not have option to develop"
+        ),
+        (
+            state_with_player(board=board_with_set(position, developed_property_set([1, 1, 1])), sets=with_building_cost(50), cash=50), position,
+            [actions.auction(position), actions.develop(position, 50), actions.demolish(position, 25)],
+            "Given evenly developed residential set, owner should have option to develop or demolish"
+        ),
+        (
+            state_with_player(board=board_with_set(position, developed_property_set([1, 1, 1])), sets=with_building_cost(50), cash=0), position,
+            [actions.auction(position), actions.demolish(position, 25)],
+            "Given evenly developed residential set and insufficient cash, owner should not have option to develop"
+        ),
+        (
+            state_with_player(board=board_with_set(position, developed_property_set([1, 0, 0])), sets=with_building_cost(50)), position,
+            [actions.auction(position), actions.demolish(position, 25)],
+            "Given maximum development among set, owner should have option to demolish"
+        ),
+        (
+            state_with_player(board=board_with_set(position, developed_property_set([1, 2, 2])), sets=with_building_cost(50), cash=50), position,
+            [actions.auction(position), actions.develop(position, 50)],
+            "Given minimum development among set, owner should have option to develop"
+        ),
+        (
+            state_with_player(board=board_with_set(position, developed_property_set([5, 5, 5])), sets=with_building_cost(50)), position,
+            [actions.auction(position), actions.demolish(position, 25)],
+            "Given maximum possible development, owner should have option to demolish"
+        )
+    ]
+
+    for state, position, expectedAction, message in test_cases:
+        sut = Game(state, StateUpdater(state))
+
+        gotAction = sut.use_property(position)
+
+        assert gotAction == expectedAction, message
+
+
+def test_end_auction():
+    position = 5
+
+    def with_bid(bidder, bid):
+        return {
+            'position': position,
+            'bidder': bidder,
+            'amount': bid
+        }
+    
+    test_cases = [
+        (
+            state_with_player(board=board(position, with_property(owner=None, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            actions.buy_property(position, 50),
+            "Player should win property when last bidder"
+        ),
+        (
+            state_with_player(board=board(position, with_property(owner=0, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            None,
+            "Given mortgage, player should retain property if passed in"
+        ),
+        (
+            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            [actions.buy_property(position, 50), actions.lift_mortgage(position, 55)],
+            "Given mortgage, buyer should have option to lift mortgage or buy property"
+        ),
+        (
+            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=55, auction=with_bid(bidder=0, bid=50)),
+            actions.buy_property(position, 50),
+            "Given mortgage and insufficient cash, buyer should not have option to lift mortgage"
+        )
+    ]
+
+    for state, expectedAction, message in test_cases:
+        sut = Game(state, StateUpdater(state))
+
+        gotAction = sut.end_auction()
+
         assert gotAction == expectedAction, message

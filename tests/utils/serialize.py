@@ -35,9 +35,10 @@ def new_property():
     }
 
 
-def new_set(type):
+def new_set(type, building=0):
     return {
-        'type': type
+        'type': type,
+        'building': building
     }
 
 

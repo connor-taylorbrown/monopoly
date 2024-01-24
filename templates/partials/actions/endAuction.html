@@ -1,3 +1,7 @@
 <button hx-post="/{{ game }}/endAuction" hx-swap="outerhtml" hx-target="#state">
+    {% if state.get_destination(action.position).owner != state.get_player().id %}
     Buy for {{ state.last_bid().amount }}
+    {% else %}
+    Pass in
+    {% endif %}
 </button>

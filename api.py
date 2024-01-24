@@ -9,13 +9,39 @@ from monopoly.view import View
 def configure_routing(app: Flask, server: GameServer):
     logger = app.logger
 
-    def show_state(func):
+    def update_state(func):
         @wraps(func)
         def inner(id, *args, **kwargs):
             game, state = server.get(int(id))
             action = func(game, *args, **kwargs)
-            view = View.create(id, state, action)
+
+            state.action = action if action else game.resume()
+            view = View.create(id, state, state.action)
             return render_template('partials/state.html', **view)
+        
+        return inner
+    
+    def update_property(func):
+        @wraps(func)
+        def inner(id, property, *args, **kwargs):
+            game, state = server.get(int(id))
+
+            func(game, property, *args, **kwargs)
+
+            view = View.create(id, state, action=None)
+            return render_template('partials/view/players.html', **view)
+        
+        return inner
+    
+    def update_auction(func):
+        @wraps(func)
+        def inner(id, *args, **kwargs):
+            game, state = server.get(int(id))
+
+            actions = func(game, *args, **kwargs)
+
+            view = View.create(id, state, action=actions)
+            return render_template('partials/auction.html', **view)
         
         return inner
 
@@ -40,148 +66,123 @@ def configure_routing(app: Flask, server: GameServer):
         id = int(id)
         game, state = server.get(id)
 
-        actions = game.use_property(int(property))
+        property_actions = game.use_property(int(property))
 
-        view = View.create(id, state, action=actions)
-        return render_template('partials/property.html', **view)
+        view = View.create(id, state, action=None)
+        return render_template('partials/property.html', property_actions=property_actions, **view)
     
     @app.post('/<id>/mortgage/<property>')
-    def mortgage(id, property):
-        id = int(id)
-        game, state = server.get(id)
-
+    @update_property
+    def mortgage(game: Game, property):
         amount = request.args.get('amount')
         game.mortgage(int(property), int(amount))
-
-        view = View.create(id, state, action=None)
-        return render_template('partials/players.html', **view)
     
     @app.post('/<id>/unmortgage/<property>')
-    def lift_mortgage(id, property):
-        id = int(id)
-        game, state = server.get(id)
-
+    @update_property
+    def lift_mortgage(game: Game, property):
         amount = request.args.get('amount')
         game.lift_mortgage(int(property), int(amount))
-
-        view = View.create(id, state, action=None)
-        return render_template('partials/players.html', **view)
     
     @app.post('/<id>/auction/<property>')
-    def auction(id, property):
-        id = int(id)
-        game, state = server.get(id)
-
-        actions = game.auction(int(property))
-
-        view = View.create(id, state, action=actions)
-        return render_template('partials/auction.html', **view)
+    @update_auction
+    def auction(game: Game, property):
+        return game.auction(int(property))
     
     @app.post('/<id>/bid')
-    def bid(id):
-        id = int(id)
-        game, state = server.get(id)
-
+    @update_auction
+    def bid(game: Game):
         price = request.form['price']
-        actions = game.bid(int(price))
-
-        view = View.create(id, state, action=actions)
-        return render_template('partials/auction.html', **view)
+        return game.bid(int(price))
     
     @app.post('/<id>/stay')
-    def stay(id):
-        id = int(id)
-        game, state = server.get(id)
-
-        actions = game.stay()
-
-        view = View.create(id, state, action=actions)
-        return render_template('partials/auction.html', **view)
+    @update_auction
+    def stay(game: Game):
+        return game.stay()
     
     @app.post('/<id>/endAuction')
-    @show_state
+    @update_state
     def end_auction(game: Game):
         return game.end_auction()
 
     @app.post('/<id>/roll')
-    @show_state
+    @update_state
     def roll(game: Game):
         return game.roll()
     
     @app.post('/<id>/passGo/<position>')
-    @show_state
+    @update_state
     def pass_go(game: Game, position):
         amount = request.args.get('amount')
         return game.pass_go(int(position), int(amount))
     
     @app.post('/<id>/drawCard')
-    @show_state
+    @update_state
     def draw_card(game: Game):
         return game.draw_card()
     
     @app.post('/<id>/jump/<position>')
-    @show_state
+    @update_state
     def jump(game: Game, position):
         return game.jump(int(position))
     
     @app.post('/<id>/goTo/<position>')
-    @show_state
+    @update_state
     def go_to(game: Game, position):
         return game.go_to(int(position))
     
     @app.post('/<id>/buy/<position>')
-    @show_state
+    @update_state
     def buy(game: Game, position):
         price = request.args.get('price')
         return game.buy_property(int(position), int(price))
     
     @app.post('/<id>/rent/<position>')
-    @show_state
+    @update_state
     def rent(game: Game, position):
         amount = request.args.get('amount')
         return game.pay_rent(int(position), int(amount))
     
     @app.post('/<id>/pay')
-    @show_state
+    @update_state
     def pay(game: Game):
         amount = request.args.get('amount')
         return game.pay_bank(int(amount))
     
     @app.post('/<id>/payEachPlayer')
-    @show_state
+    @update_state
     def pay_each_player(game: Game):
         amount = request.args.get('amount')
         return game.pay_each_player(int(amount))
     
     @app.post('/<id>/collect')
-    @show_state
+    @update_state
     def collect(game: Game):
         amount = request.args.get('amount')
         return game.pay_bank(-int(amount))
     
     @app.post('/<id>/collectFromEachPlayer')
-    @show_state
+    @update_state
     def collect_from_each_player(game: Game):
         amount = request.args.get('amount')
         return game.pay_each_player(-int(amount))
     
     @app.post('/<id>/goToJail')
-    @show_state
+    @update_state
     def go_to_jail(game: Game):
         return game.go_to_jail()
     
     @app.post('/<id>/collectCard')
-    @show_state
+    @update_state
     def collect_card(game: Game):
         return game.collect_card()
     
     @app.post('/<id>/useCard')
-    @show_state
+    @update_state
     def use_card(game: Game):
         return game.use_card()
     
     @app.post('/<id>/leaveJail')
-    @show_state
+    @update_state
     def leave_jail(game: Game):
         position = request.args.get('position')
         if position is not None:
@@ -194,12 +195,12 @@ def configure_routing(app: Flask, server: GameServer):
         return game.leave_jail(position, amount)
     
     @app.post('/<id>/serveTime')
-    @show_state
+    @update_state
     def serve_time(game: Game):
         return game.serve_time()
     
     @app.post('/<id>/endTurn')
-    @show_state
+    @update_state
     def end_turn(game: Game):
         return game.end_turn()
     

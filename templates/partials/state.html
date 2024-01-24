@@ -5,14 +5,18 @@
             {{ message }}
         </div>
         {% if action is mapping %}
-            {% include 'partials/state/%s.html' % action.action %}
+            {% include 'partials/actions/%s.html' % action.action %}
         {% else %}
-            {% for option in action %}
-                {% with action=option %}
-                    {% include 'partials/state/%s.html' % option.action %}
-                {% endwith %}
-            {% endfor %}
+        <ul>
+        {% for option in action %}
+        <li>
+        {% with action=option %}
+        {% include 'partials/actions/%s.html' % option.action %}
+        {% endwith %}
+        </li>
+        {% endfor %}
+        </ul>
         {% endif %}
     </div>
-    {% include 'partials/players.html' %}
+    {% include 'partials/view/players.html' %}
 </div>

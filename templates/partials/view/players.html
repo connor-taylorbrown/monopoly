@@ -6,18 +6,22 @@
             <th>Position</th>
             <th>Doubles</th>
             <th>In Jail</th>
+            <th>Cards</th>
             <th>Properties</th>
         </tr>
         {% for player in state.get_players() %}
             {% with id=loop.index0 %}
-            <tr>
+            {% with player=player %}
+            <tr class="even:bg-gray-50 odd:bg-white">
                 <td>{{ id }}</td>
                 <td>{{ player.cash }}</td>
                 <td>{{ state.get_destination(player.position).name }}</td>
                 <td>{{ player.doubles }}</td>
                 <td>{{ player.in_jail }}</td>
-                <td>{% include 'partials/properties.html' %}</td>
+                <td>{% include 'partials/view/cards.html' %}</td>
+                <td>{% include 'partials/view/properties.html' %}</td>
             </tr>
+            {% endwith %}
             {% endwith %}
         {% endfor %}
     </table>

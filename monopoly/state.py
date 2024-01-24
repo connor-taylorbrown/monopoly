@@ -11,6 +11,7 @@ class GameState:
     player: int
     started: bool
     roll: tuple[int, int]
+    auction: dict | None = None
         
 
 @dataclass
@@ -69,6 +70,10 @@ class StateUpdater:
         player = self.state.players[property['owner']]
         player.cash += amount
         property['mortgaged'] = True
+    
+    def encumber(self, position: int):
+        property = self.state.board[position]
+        property['encumbered'] = True
 
     def unmortgage_property(self, position: int, repayment: int):
         property = self.state.board[position]
@@ -96,22 +101,18 @@ class StateUpdater:
             payee = self.state.players[i]
             payee.cash += amount
 
-    def buy_property(self, position: int, price: int):
-        player = self.state.players[self.state.player]
+    def acquire_property(self, position: int):
         property = self.state.board[position]
-        
-        player.cash -= price
         property['owner'] = self.state.player
 
-
-    def auction(self, position):
+    def auction(self, position, next):
         self.state.auction = {
             'position': position,
-            'auctioneer': self.state.player,
+            'nextPlayer': self.state.player,
+            'nextAction': next,
             'bidder': None,
             'amount': 0
         }
-
 
     def bid(self, amount):
         player = self.state.player
@@ -120,3 +121,16 @@ class StateUpdater:
             'bidder': player,
             'amount': amount
         }
+
+    def resume(self, action=None):
+        if not self.state.auction:
+            return action
+        
+        next_player, next_action = [self.state.auction[k] for k in ['nextPlayer', 'nextAction']]
+        self.state.player = next_player
+        self.state.auction = None
+        
+        if not next_action:
+            return action
+        
+        return next_action

@@ -5,9 +5,13 @@
     <p>Latest bid: Player {{ bid.bidder }} for {{ bid.amount }}</p>
     {% endif %}
     <p>Player {{ state.get_player().id }} to bid</p>
+    <ul>
     {% for option in action %}
-        {% with action=option %}
-            {% include 'partials/auction/%s.html' % action.action %}
-        {% endwith %}
+    <li>
+    {% with action=option %}
+    {% include 'partials/actions/%s.html' % action.action %}
+    {% endwith %}
+    </li>
     {% endfor %}
+    </ul>
 </div>

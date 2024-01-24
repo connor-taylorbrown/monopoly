@@ -14,35 +14,43 @@
         },
         {
             "color": "text-orange-900",
-            "type": 1
+            "type": 1,
+            "building": 50
         },
         {
             "color": "text-sky-300",
-            "type": 1
+            "type": 1,
+            "building": 50
         },
         {
             "color": "text-pink-600",
-            "type": 1
+            "type": 1,
+            "building": 100
         },
         {
             "color": "text-orange-600",
-            "type": 1
+            "type": 1,
+            "building": 100
         },
         {
             "color": "text-red-600",
-            "type": 1
+            "type": 1,
+            "building": 150
         },
         {
             "color": "text-yellow-300",
-            "type": 1
+            "type": 1,
+            "building": 150
         },
         {
             "color": "text-green-600",
-            "type": 1
+            "type": 1,
+            "building": 200
         },
         {
             "color": "text-blue-900",
-            "type": 1
+            "type": 1,
+            "building": 200
         }
     ],
     "properties": [
