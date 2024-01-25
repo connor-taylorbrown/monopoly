@@ -109,10 +109,10 @@ def configure_routing(app: Flask, server: GameServer):
     def stay(game: Game):
         return game.stay()
     
-    @app.post('/<id>/endAuction')
+    @app.post('/<id>/endAuction/<position>')
     @update_state
-    def end_auction(game: Game):
-        return game.end_auction()
+    def end_auction(game: Game, position):
+        return game.end_auction(int(position))
 
     @app.post('/<id>/roll')
     @update_state

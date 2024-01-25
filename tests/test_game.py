@@ -914,38 +914,39 @@ def test_end_auction():
 
     def with_bid(bidder, bid):
         return {
-            'position': position,
+            'orders': [{'article': position}],
+            'order': 0,
             'bidder': bidder,
             'amount': bid
         }
     
     test_cases = [
         (
-            state_with_player(board=board(position, with_property(owner=None, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            state_with_player(board=board(position, with_property(owner=None, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)), position,
             actions.buy_property(position, 50),
             "Player should win property when last bidder"
         ),
         (
-            state_with_player(board=board(position, with_property(owner=0, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            state_with_player(board=board(position, with_property(owner=0, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)), position,
             None,
             "Given mortgage, player should retain property if passed in"
         ),
         (
-            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)),
+            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=150, auction=with_bid(bidder=0, bid=50)), position,
             [actions.buy_property(position, 50), actions.lift_mortgage(position, 55)],
             "Given mortgage, buyer should have option to lift mortgage or buy property"
         ),
         (
-            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=55, auction=with_bid(bidder=0, bid=50)),
+            state_with_player(board=board(position, with_property(owner=1, mortgaged=True, price=100)), cash=55, auction=with_bid(bidder=0, bid=50)), position,
             actions.buy_property(position, 50),
             "Given mortgage and insufficient cash, buyer should not have option to lift mortgage"
         )
     ]
 
-    for state, expectedAction, message in test_cases:
+    for state, position, expectedAction, message in test_cases:
         sut = Game(state, StateUpdater(state))
 
-        gotAction = sut.end_auction()
+        gotAction = sut.end_auction(position)
 
         assert gotAction == expectedAction, message
 

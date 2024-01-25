@@ -130,10 +130,3 @@ def stay():
     return {
         'action': 'stay'
     }
-
-
-def end_auction(position):
-    return {
-        'action': 'endAuction',
-        'position': position
-    }

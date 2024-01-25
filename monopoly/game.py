@@ -1,6 +1,6 @@
 import random
 from monopoly import actions
-from monopoly.model import Player, Property, PropertyType
+from monopoly.model import Auction, Player, Property, PropertyType
 from monopoly.state import GameState, StateUpdater
 
 
@@ -14,6 +14,14 @@ def get_player(state) -> Player:
 
 def get_next_player(state) -> int:
     return (state.player + 1) % len(state.players)
+
+
+def get_auction(state) -> Auction:
+    return Auction(**state.auction)
+
+
+def get_next_order(auction) -> int:
+    return (auction.order + 1) % len(auction.orders)
 
 
 def get_property(state, position) -> Property:
@@ -273,33 +281,38 @@ class Game:
     
     def auction(self, position, interrupt):
         self.updater.save(interrupt)
-        self.updater.auction(position)
+
+        property = get_property(self.state, position)
+        orders = [
+            {'action': 'endAuction', 'article': position, 'value': property.price, 'attendee': i}
+            for i, _ in enumerate(self.state.players)
+        ]
+        self.updater.auction(orders, self.state.player)
         return [actions.bid(), actions.stay()]
     
     def bid(self, amount):
-        auction = self.state.auction
-        if amount <= auction['amount']:
+        auction = get_auction(self.state)
+        if amount <= auction.amount:
             return [actions.bid(), actions.stay()]
         
         self.updater.bid(amount)
 
-        next_player = get_next_player(self.state)
-        self.updater.set_player(next_player)
+        self.updater.set_order(get_next_order(auction))
         return [actions.bid(), actions.stay()]
     
     def stay(self):
-        next_player = get_next_player(self.state)
-        self.updater.set_player(next_player)
+        auction = get_auction(self.state)
+        self.updater.set_order(get_next_order(auction))
 
         player = self.state.player
-        position, last_bidder = [self.state.auction[k] for k in ['position', 'bidder']]
+        last_bidder = auction.bidder
         if player == last_bidder:
-            return [actions.end_auction(position)]
+            return [auction.orders[auction.order]]
 
         return [actions.bid(), actions.stay()]
     
-    def end_auction(self):
-        position, bid = [self.state.auction[k] for k in ['position', 'amount']]
+    def end_auction(self, position):
+        bid = get_auction(self.state).amount
         property = get_property(self.state, position)
         if property.owner == self.state.player:
             return None

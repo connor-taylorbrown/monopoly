@@ -26,6 +26,14 @@ class Property:
     encumbered: bool = False
 
 
+@dataclass
+class Auction:
+    orders: list
+    order: int
+    bidder: int
+    amount: int
+
+
 class PropertyType(Enum):
     NONE = 0
     RESIDENTIAL = 1

@@ -26,6 +26,9 @@ class View:
     
     def last_bid(self):
         return self.state.auction
+    
+    def get_order(self, order):
+        return self.state.auction['orders'][order]
 
     def create(game: int, state: GameState, action: dict):
         view = {

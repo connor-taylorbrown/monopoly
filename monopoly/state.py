@@ -126,12 +126,19 @@ class StateUpdater:
             'nextAction': self.state.action if interrupt else None
         }
 
-    def auction(self, position):
+    def auction(self, orders, order):
         self.state.auction = {
-            'position': position,
+            'orders': orders,
+            'order': order,
             'bidder': None,
             'amount': 0
         }
+
+    def set_order(self, next):
+        auction = self.state.auction
+        auction['order'] = next
+        order = auction['orders'][next]
+        self.set_player(order['attendee'])
 
     def bid(self, amount):
         player = self.state.player

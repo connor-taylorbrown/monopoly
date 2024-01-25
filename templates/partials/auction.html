@@ -1,6 +1,7 @@
 <div id="action">
     {% set bid=state.last_bid() %}
-    <p>For {{ state.get_destination(bid.position).name }}</p>
+    {% set order=state.get_order(bid.order) %}
+    <p>For {{ state.get_destination(order.article).name }}, bank value {{ order.value }}</p>
     {% if bid.bidder is not none %}
     <p>Latest bid: Player {{ bid.bidder }} for {{ bid.amount }}</p>
     {% endif %}
