@@ -112,10 +112,11 @@ def demolish(position, amount):
     }
 
 
-def auction(position):
+def auction(position, interrupt):
     return {
         'action': 'auction',
-        'position': position
+        'position': position,
+        'interrupt': 'interrupt' if interrupt else None
     }
 
 

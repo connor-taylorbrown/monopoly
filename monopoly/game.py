@@ -164,7 +164,7 @@ class Game:
         if is_tax(property):
             return actions.pay(property.price)
         if is_purchaseable(property):
-            auction = actions.auction(position)
+            auction = actions.auction(position, False)
             if get_player(self.state).cash >= property.price:
                 return [actions.buy_property(position, property.price), auction]
             else:
@@ -221,7 +221,7 @@ class Game:
         property = get_property(self.state, position)
         owner = self.state.players[property.owner]
 
-        result = [actions.auction(position)]
+        result = [actions.auction(position, True)]
         if property.mortgaged:
             interest = 1.1 if not property.encumbered else 1.2
             cost = int(interest * property.price / 2)
@@ -264,11 +264,16 @@ class Game:
 
     def lift_mortgage(self, position, amount):
         self.updater.unmortgage_property(position, amount)
+
+    def develop(self, position, amount):
+        self.updater.develop(position, amount)
+
+    def demolish(self, position, amount):
+        self.updater.demolish(position, amount)
     
-    def auction(self, position):
-        property = get_property(self.state, position)
-        next = self.state.action if property.owner is not None else None
-        self.updater.auction(position, next)
+    def auction(self, position, interrupt):
+        self.updater.save(interrupt)
+        self.updater.auction(position)
         return [actions.bid(), actions.stay()]
     
     def bid(self, amount):

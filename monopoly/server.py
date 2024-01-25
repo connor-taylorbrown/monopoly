@@ -1,8 +1,7 @@
 import random
-from cachetools import cached
 import requests
 from monopoly.game import Game
-from monopoly.model import Player, Property, PropertySet
+from monopoly.model import Player
 from monopoly.state import GameState, StateUpdater
 
 

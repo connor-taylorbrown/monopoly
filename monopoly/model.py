@@ -31,8 +31,3 @@ class PropertyType(Enum):
     RESIDENTIAL = 1
     UTILITY = 2
     STATION = 3
-
-
-class PropertySet:
-    color: str
-    type: int

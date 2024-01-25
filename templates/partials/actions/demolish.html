@@ -1,0 +1,4 @@
+<button hx-post="/{{ game }}/demolish" hx-swap="outerhtml" hx-target="#players">
+    {% set property=state.get_destination(action.position) %}
+    Sell building on {{ property.name }} for {{ action.amount }}
+</button>

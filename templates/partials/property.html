@@ -1,6 +1,6 @@
 <div id="property">
     <ul>
-    {% for option in property_actions %}
+    {% for option in action %}
     <li>
         {% with action=option %}
         {% include 'partials/actions/%s.html' % action.action %}

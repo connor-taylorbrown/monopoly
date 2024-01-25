@@ -1,8 +1,6 @@
-import requests
 from api import configure_routing
 from flask import Flask
 
-from monopoly.model import Property, PropertySet
 from monopoly.server import Board, GameServer
 
 

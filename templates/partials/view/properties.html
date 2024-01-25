@@ -6,7 +6,7 @@
             {% if not property.mortgaged %}
             <span class="{{ property.color }}">{{ property.name }}</span>
             {% else %}
-            <span class="text-slate-500">{{ property.name }}</span>
+            <span class="text-slate-500">{{ property.name }} {% if property.houses %}( {{property.houses}} ){% endif %}</span>
             {% endif %}
         </button>
     </li>

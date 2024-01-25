@@ -11,6 +11,7 @@ class GameState:
     player: int
     started: bool
     roll: tuple[int, int]
+    restore: dict | None = None
     auction: dict | None = None
         
 
@@ -81,6 +82,20 @@ class StateUpdater:
         player.cash -= repayment
         property['mortgaged'] = False
 
+    def develop(self, position: int, cost: int):
+        property = self.state.board[position]
+        player = self.state.players[property['owner']]
+        player.cash -= cost
+        if 'houses' not in property:
+            property['houses'] = 0
+        property['houses'] += 1
+
+    def demolish(self, position: int, proceeds: int):
+        property = self.state.board[position]
+        player = self.state.players[property['owner']]
+        player.cash += proceeds
+        property['houses'] -= 1
+
     def pay_bank(self, amount: int):
         player = self.state.players[self.state.player]
         player.cash -= amount
@@ -105,11 +120,15 @@ class StateUpdater:
         property = self.state.board[position]
         property['owner'] = self.state.player
 
-    def auction(self, position, next):
+    def save(self, interrupt):
+        self.state.restore = {
+            'nextPlayer': self.state.player,
+            'nextAction': self.state.action if interrupt else None
+        }
+
+    def auction(self, position):
         self.state.auction = {
             'position': position,
-            'nextPlayer': self.state.player,
-            'nextAction': next,
             'bidder': None,
             'amount': 0
         }
@@ -123,12 +142,12 @@ class StateUpdater:
         }
 
     def resume(self, action=None):
-        if not self.state.auction:
+        if not self.state.restore:
             return action
         
-        next_player, next_action = [self.state.auction[k] for k in ['nextPlayer', 'nextAction']]
+        next_player, next_action = [self.state.restore[k] for k in ['nextPlayer', 'nextAction']]
         self.state.player = next_player
-        self.state.auction = None
+        self.state.restore = None
         
         if not next_action:
             return action

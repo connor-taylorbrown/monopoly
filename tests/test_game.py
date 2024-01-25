@@ -222,6 +222,21 @@ def should_buy_property(buyer, amounts, encumbered=False):
     }
 
 
+def should_build_property(cash, houses):
+    return {
+        'board': [
+            {
+                'houses': houses
+            }
+        ],
+        'players': [
+            {
+                'cash': cash
+            }
+        ]
+    }
+
+
 def should_have_next_player(player):
     return {
         'player': player
@@ -558,12 +573,12 @@ def test_go_to():
         ),
         (
             state_with_player(board=board(position, with_property(set=1, owner=None, price=200)), cash=200), position,
-            should_be_at_position(position), [actions.buy_property(position, 200), actions.auction(position)],
+            should_be_at_position(position), [actions.buy_property(position, 200), actions.auction(position, False)],
             "Player should have option to buy property given enough cash"
         ),
         (
             state_with_player(board=board(position, with_property(set=1, owner=None, price=200)), cash=150), position,
-            should_be_at_position(position), actions.auction(position),
+            should_be_at_position(position), actions.auction(position, False),
             "Player should auction property given insufficient cash"
         ),
         (
@@ -816,72 +831,72 @@ def test_use_property():
     test_cases = [
         (
             state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, station), owned=2, total=2))), position,
-            [actions.auction(position), actions.mortgage(position, 100)],
+            [actions.auction(position, True), actions.mortgage(position, 100)],
             "Given non-residential property, owner should have option to mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=1, total=2))), position,
-            [actions.auction(position), actions.mortgage(position, 100)],
+            [actions.auction(position, True), actions.mortgage(position, 100)],
             "Given residential property, owner of partial set should have option to mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_mortgaged_property(200, residential), owned=2, total=2)), cash=110), position,
-            [actions.auction(position), actions.lift_mortgage(position, 110)],
+            [actions.auction(position, True), actions.lift_mortgage(position, 110)],
             "Given mortgaged property, owner should have option to lift mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_mortgaged_property(200, residential), owned=2, total=2)), cash=0), position,
-            [actions.auction(position)],
+            [actions.auction(position, True)],
             "Given mortgaged property and insufficient cash, owner should not have option to lift mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_encumbered_property(200, residential), owned=2, total=2)), cash=120), position,
-            [actions.auction(position), actions.lift_mortgage(position, 120)],
+            [actions.auction(position, True), actions.lift_mortgage(position, 120)],
             "Given encumbered property, owner should pay double interest to lift mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_encumbered_property(200, residential), owned=2, total=2)), cash=0), position,
-            [actions.auction(position)],
+            [actions.auction(position, True)],
             "Given encumbered property and insufficient cash, owner should not have option to lift mortgage"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=2, total=2)), sets=with_building_cost(50), cash=50), position,
-            [actions.auction(position), actions.mortgage(position, 100), actions.develop(position, 50)],
+            [actions.auction(position, True), actions.mortgage(position, 100), actions.develop(position, 50)],
             "Given undeveloped residential property, owner should have option to mortgage or develop"
         ),
         (
             state_with_player(board=board_with_set(position, property_set(with_undeveloped_property(200, residential), owned=2, total=2)), sets=with_building_cost(50), cash=0), position,
-            [actions.auction(position), actions.mortgage(position, 100)],
+            [actions.auction(position, True), actions.mortgage(position, 100)],
             "Given undeveloped residential property and insufficient cash, owner should not have option to develop"
         ),
         (
             state_with_player(board=board_with_set(position, partially_mortgaged_set(200, [False, True, False])), sets=with_building_cost(50), cash=50), position,
-            [actions.auction(position), actions.mortgage(position, 100)],
+            [actions.auction(position, True), actions.mortgage(position, 100)],
             "Given partially mortgaged residential set, owner should not have option to develop"
         ),
         (
             state_with_player(board=board_with_set(position, developed_property_set([1, 1, 1])), sets=with_building_cost(50), cash=50), position,
-            [actions.auction(position), actions.develop(position, 50), actions.demolish(position, 25)],
+            [actions.auction(position, True), actions.develop(position, 50), actions.demolish(position, 25)],
             "Given evenly developed residential set, owner should have option to develop or demolish"
         ),
         (
             state_with_player(board=board_with_set(position, developed_property_set([1, 1, 1])), sets=with_building_cost(50), cash=0), position,
-            [actions.auction(position), actions.demolish(position, 25)],
+            [actions.auction(position, True), actions.demolish(position, 25)],
             "Given evenly developed residential set and insufficient cash, owner should not have option to develop"
         ),
         (
             state_with_player(board=board_with_set(position, developed_property_set([1, 0, 0])), sets=with_building_cost(50)), position,
-            [actions.auction(position), actions.demolish(position, 25)],
+            [actions.auction(position, True), actions.demolish(position, 25)],
             "Given maximum development among set, owner should have option to demolish"
         ),
         (
             state_with_player(board=board_with_set(position, developed_property_set([1, 2, 2])), sets=with_building_cost(50), cash=50), position,
-            [actions.auction(position), actions.develop(position, 50)],
+            [actions.auction(position, True), actions.develop(position, 50)],
             "Given minimum development among set, owner should have option to develop"
         ),
         (
             state_with_player(board=board_with_set(position, developed_property_set([5, 5, 5])), sets=with_building_cost(50)), position,
-            [actions.auction(position), actions.demolish(position, 25)],
+            [actions.auction(position, True), actions.demolish(position, 25)],
             "Given maximum possible development, owner should have option to demolish"
         )
     ]
@@ -933,3 +948,28 @@ def test_end_auction():
         gotAction = sut.end_auction()
 
         assert gotAction == expectedAction, message
+
+
+def test_develop():
+    position = 5
+
+    test_cases = [
+        (
+            state_with_player(board=board(position, with_property(owner=0)), cash=50), position, 50,
+            should_build_property(cash=0, houses=1),
+            "Owner should pay to build house"
+        )
+    ]
+
+    def query(state):
+        return {
+            'board': [{k: state.board[position][k] for k in ['houses']}],
+            'players': [query_player(state, ['cash'])]
+        }
+
+    for state, position, amount, expectedState, message in test_cases:
+        sut = Game(state, StateUpdater(state))
+
+        gotState, _ = state, sut.develop(position, amount)
+
+        assert query(gotState) == expectedState, message

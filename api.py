@@ -26,7 +26,8 @@ def configure_routing(app: Flask, server: GameServer):
         def inner(id, property, *args, **kwargs):
             game, state = server.get(int(id))
 
-            func(game, property, *args, **kwargs)
+            amount = request.args.get('amount')
+            func(game, int(property), int(amount), *args, **kwargs)
 
             view = View.create(id, state, action=None)
             return render_template('partials/view/players.html', **view)
@@ -66,27 +67,36 @@ def configure_routing(app: Flask, server: GameServer):
         id = int(id)
         game, state = server.get(id)
 
-        property_actions = game.use_property(int(property))
+        action = game.use_property(int(property))
 
-        view = View.create(id, state, action=None)
-        return render_template('partials/property.html', property_actions=property_actions, **view)
+        view = View.create(id, state, action)
+        return render_template('partials/property.html', **view)
     
     @app.post('/<id>/mortgage/<property>')
     @update_property
-    def mortgage(game: Game, property):
-        amount = request.args.get('amount')
-        game.mortgage(int(property), int(amount))
+    def mortgage(game: Game, property: int, amount: int):
+        game.mortgage(property, amount)
     
     @app.post('/<id>/unmortgage/<property>')
     @update_property
-    def lift_mortgage(game: Game, property):
-        amount = request.args.get('amount')
-        game.lift_mortgage(int(property), int(amount))
+    def lift_mortgage(game: Game, property: int, amount: int):
+        game.lift_mortgage(property, amount)
+
+    @app.post('/<id>/develop/<property>')
+    @update_property
+    def develop(game: Game, property: int, amount: int):
+        game.develop(property, amount)
+
+    @app.post('/<id>/demolish/<property>')
+    @update_property
+    def demolish(game: Game, property: int, amount: int):
+        game.demolish(property, amount)
     
     @app.post('/<id>/auction/<property>')
     @update_auction
     def auction(game: Game, property):
-        return game.auction(int(property))
+        interrupt = request.args.get('interrupt')
+        return game.auction(int(property), bool(interrupt))
     
     @app.post('/<id>/bid')
     @update_auction
