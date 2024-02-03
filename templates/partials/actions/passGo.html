@@ -1,0 +1,3 @@
+<button hx-post="/{{ game }}/passGo/{{ action.position }}?amount={{ action.amount }}" hx-swap="outerhtml" hx-target="#state">
+    Collect {{ action.amount }} and go to {{ state.get_destination(action.position).name }}
+</button>

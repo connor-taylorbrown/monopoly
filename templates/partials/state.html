@@ -1,0 +1,22 @@
+<div id="state">
+    <div id="action">
+        <p>Player {{ state.get_player().id }} to move</p>
+        <div id="message">
+            {{ message }}
+        </div>
+        {% if action is mapping %}
+            {% include 'partials/actions/%s.html' % action.action %}
+        {% else %}
+        <ul>
+        {% for option in action %}
+        <li>
+        {% with action=option %}
+        {% include 'partials/actions/%s.html' % option.action %}
+        {% endwith %}
+        </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% include 'partials/view/players.html' %}
+</div>

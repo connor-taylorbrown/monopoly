@@ -2,3 +2,5 @@ flask
 gunicorn
 google-cloud-storage
 requests
+pytest
+faker

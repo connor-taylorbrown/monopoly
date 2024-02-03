@@ -1,0 +1,11 @@
+<div id="property">
+    <ul>
+    {% for option in action %}
+    <li>
+        {% with action=option %}
+        {% include 'partials/actions/%s.html' % action.action %}
+        {% endwith %}
+    </li>
+    {% endfor %}
+    </ul>
+</div>

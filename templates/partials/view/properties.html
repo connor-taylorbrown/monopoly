@@ -1,0 +1,14 @@
+<ul>
+    {% for position in state.owns_property(id) %}
+    <li>
+        {% set property=state.get_destination(position) %}
+        <button hx-get="/{{ game }}/properties/{{ position }}" hx-swap="outerhtml" hx-target="#property">
+            {% if not property.mortgaged %}
+            <span class="{{ property.color }}">{{ property.name }}</span>
+            {% else %}
+            <span class="text-slate-500">{{ property.name }} {% if property.houses %}( {{property.houses}} ){% endif %}</span>
+            {% endif %}
+        </button>
+    </li>
+    {% endfor %}
+</ul>
